@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, follow">
+<link rel="canonical" href="https://holybiblebook.org/contact.html">
+<meta name="description" content="Get in touch with Holy Bible Book. Send a message, prayer request, or feedback. We read every message.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Us | Holy Bible Book</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Didact+Gothic&display=swap" rel="stylesheet">
+<style>
+:root{--black:#0a0806;--deep:#111009;--warm:#1c1810;--gold:#c9973a;--gl:#e2b96a;--cream:#faf6ee;--border:rgba(201,151,58,0.2);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--black);color:var(--cream);font-family:"Didact Gothic",sans-serif;min-height:100vh;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,8,6,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-family:"Playfair Display",serif;font-size:.95rem;color:var(--gl);text-decoration:none;letter-spacing:.06em;}
+.nav-home{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.4);text-decoration:none;border:1px solid rgba(255,255,255,.1);padding:7px 16px;transition:all .3s;}
+.nav-home:hover{border-color:var(--gold);color:var(--gold);}
+
+/* PAGE */
+.page{padding:110px 24px 80px;max-width:680px;margin:0 auto;}
+
+/* HEADER */
+.page-tag{font-size:.58rem;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.page-tag::before{content:"";display:block;width:28px;height:1px;background:var(--gold);}
+.page-h1{font-family:"Playfair Display",serif;font-size:clamp(2rem,5vw,3rem);font-weight:400;line-height:1.15;margin-bottom:14px;}
+.page-h1 em{font-style:italic;color:var(--gl);}
+.page-sub{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:1.05rem;color:rgba(250,246,238,.45);line-height:1.8;margin-bottom:48px;}
+
+/* FORM */
+.contact-form{display:flex;flex-direction:column;gap:20px;}
+.field{display:flex;flex-direction:column;gap:7px;}
+.field label{font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);}
+.field input,.field textarea,.field select{background:rgba(255,255,255,.04);border:1px solid rgba(201,151,58,.2);color:var(--cream);font-family:"Cormorant Garamond",serif;font-size:1rem;padding:13px 16px;outline:none;transition:border-color .3s;width:100%;}
+.field input::placeholder,.field textarea::placeholder{color:rgba(250,246,238,.2);}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold);}
+.field textarea{resize:vertical;min-height:140px;line-height:1.7;}
+.field select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c9973a' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;}
+.field select option{background:var(--deep);color:var(--cream);}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+.submit-btn{background:var(--gold);color:var(--black);border:none;padding:15px 36px;font-family:"Didact Gothic",sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:background .3s;align-self:flex-start;margin-top:8px;}
+.submit-btn:hover{background:var(--gl);}
+
+/* SUCCESS */
+.success-msg{display:none;background:rgba(201,151,58,.08);border:1px solid rgba(201,151,58,.3);border-left:3px solid var(--gold);padding:28px 32px;text-align:center;}
+.success-msg .icon{font-size:2rem;margin-bottom:12px;}
+.success-msg h3{font-family:"Playfair Display",serif;font-size:1.4rem;color:var(--cream);margin-bottom:8px;font-weight:400;}
+.success-msg p{font-family:"Cormorant Garamond",serif;font-style:italic;color:rgba(250,246,238,.55);font-size:1rem;line-height:1.7;}
+
+/* INFO CARDS */
+.info-cards{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:56px;}
+.info-card{background:var(--warm);padding:28px 24px;display:flex;flex-direction:column;gap:8px;}
+.info-card-icon{font-size:1.3rem;}
+.info-card-title{font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);}
+.info-card-text{font-family:"Cormorant Garamond",serif;font-size:.95rem;color:rgba(250,246,238,.55);line-height:1.6;}
+.info-card a{color:var(--gold);text-decoration:none;}
+.info-card a:hover{text-decoration:underline;}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:16px;margin:48px 0 32px;color:rgba(201,151,58,.4);font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:rgba(201,151,58,.15);}
+
+@media(max-width:600px){
+  nav{padding:12px 16px;}
+  .page{padding:90px 16px 60px;}
+  .row{grid-template-columns:1fr;}
+  .info-cards{grid-template-columns:1fr;}
+  .submit-btn{width:100%;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">&#9670; Holy Bible Book</a>
+  <a class="nav-home" href="about.html" style="margin-right:10px;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);text-decoration:none;padding:6px 4px;transition:all .3s;">About</a><a class="nav-home" href="index.html">&#8592; Back to Bible</a>
+</nav>
+
+<div class="page">
+
+  <p class="page-tag">Get in Touch</p>
+  <h1 class="page-h1">Contact <em>Us</em></h1>
+  <p class="page-sub">We&rsquo;d love to hear from you — whether it&rsquo;s a question, a prayer request, feedback about the site, or just a word of encouragement.</p>
+
+  <!-- Netlify redirect after submit -->
+  <form class="contact-form" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/thank-you.html">
+
+    <!-- Hidden field required by Netlify -->
+    <input type="hidden" name="form-name" value="contact"/>
+
+    <!-- Honeypot spam protection — hidden from users -->
+    <div style="display:none;">
+      <label>Don&rsquo;t fill this out: <input name="bot-field"/></label>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="fname">First Name *</label>
+        <input type="text" id="fname" name="first-name" placeholder="Your first name" required/>
+      </div>
+      <div class="field">
+        <label for="lname">Last Name</label>
+        <input type="text" id="lname" name="last-name" placeholder="Your last name"/>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="email">Email Address *</label>
+      <input type="email" id="email" name="email" placeholder="your@email.com" required/>
+    </div>
+
+    <div class="field">
+      <label for="subject">Subject *</label>
+      <select id="subject" name="subject" required>
+        <option value="" disabled selected>Choose a subject...</option>
+        <option value="General Question">General Question</option>
+        <option value="Prayer Request">Prayer Request</option>
+        <option value="Site Feedback">Site Feedback</option>
+        <option value="Scripture Suggestion">Scripture Suggestion</option>
+        <option value="Technical Issue">Technical Issue</option>
+        <option value="Partnership">Partnership / Collaboration</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="message">Message *</label>
+      <textarea id="message" name="message" placeholder="Write your message here..." required></textarea>
+    </div>
+
+    <button type="submit" class="submit-btn">&#9670; &nbsp;Send Message</button>
+
+  </form>
+
+
+
+  <div class="divider">Other Ways to Connect</div>
+
+  <div class="info-cards">
+    <div class="info-card">
+      <div class="info-card-icon">&#9749;</div>
+      <div class="info-card-title">Support This Ministry</div>
+      <div class="info-card-text">If this site has blessed you, consider supporting us on <a href="https://buymeacoffee.com/holybiblebook" target="_blank">Buy Me a Coffee</a>.</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-icon">&#128214;</div>
+      <div class="info-card-title">Read the Scriptures</div>
+      <div class="info-card-text">Explore all 66 books of the Bible, browse by topic, or follow a reading plan on our <a href="index.html">home page</a>.</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-icon">&#9829;</div>
+      <div class="info-card-title">Prayer Requests</div>
+      <div class="info-card-text">Submit your prayer request using the form above and select &ldquo;Prayer Request&rdquo; as the subject. We pray for every submission.</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-icon">&#10013;</div>
+      <div class="info-card-title">Our Mission</div>
+      <div class="info-card-text">To make the Word of God freely accessible to everyone, everywhere &mdash; one scripture at a time.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Form submits natively to Netlify, redirects to /thank-you.html
+</script>
+
+</body>
+</html>

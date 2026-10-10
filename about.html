@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://holybiblebook.org/about.html">
+<meta name="description" content="Learn about Holy Bible Book — an online Bible ministry sharing the Gospel with the world. Read the Bible in 26+ public domain translations in 12 languages.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Us | Holy Bible Book</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Didact+Gothic&display=swap" rel="stylesheet">
+<style>
+:root{--black:#0a0806;--deep:#111009;--warm:#1c1810;--gold:#c9973a;--gl:#e2b96a;--cream:#faf6ee;--border:rgba(201,151,58,0.2);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--black);color:var(--cream);font-family:"Didact Gothic",sans-serif;min-height:100vh;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,8,6,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-family:"Playfair Display",serif;font-size:.95rem;color:var(--gl);text-decoration:none;letter-spacing:.06em;}
+.nav-home{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.4);text-decoration:none;border:1px solid rgba(255,255,255,.1);padding:7px 16px;transition:all .3s;}
+.nav-home:hover{border-color:var(--gold);color:var(--gold);}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;align-items:center;padding:100px 0 60px;position:relative;overflow:hidden;}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(201,151,58,.06) 0%,transparent 65%);}
+.hero-inner{max-width:900px;margin:0 auto;padding:0 40px;}
+.hero-text .tag{font-size:.58rem;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;display:flex;align-items:center;gap:12px;}
+.hero-text .tag::before{content:"";display:block;width:28px;height:1px;background:var(--gold);}
+.hero-text h1{font-family:"Playfair Display",serif;font-size:clamp(2.5rem,5vw,3.8rem);font-weight:400;line-height:1.1;margin-bottom:24px;}
+.hero-text h1 em{font-style:italic;color:var(--gl);}
+.hero-text .lead{font-family:"Cormorant Garamond",serif;font-size:1.2rem;font-style:italic;color:rgba(250,246,238,.55);line-height:1.9;margin-bottom:36px;}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;}
+.btn-gold{background:var(--gold);color:var(--black);padding:14px 32px;font-family:"Didact Gothic",sans-serif;font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;text-decoration:none;transition:background .3s;display:inline-block;font-weight:700;}
+.btn-gold:hover{background:var(--gl);}
+.btn-outline{background:none;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15);padding:14px 32px;font-family:"Didact Gothic",sans-serif;font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;text-decoration:none;transition:all .3s;display:inline-block;}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+
+/* PHOTO */
+.hero-photo{position:relative;display:flex;justify-content:center;}
+.hero-photo::before{content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:80%;height:60%;background:radial-gradient(ellipse,rgba(201,151,58,.12) 0%,transparent 70%);z-index:0;}
+.hero-photo img{width:100%;max-width:480px;position:relative;z-index:1;filter:drop-shadow(0 20px 60px rgba(0,0,0,.5));}
+.photo-verse{position:absolute;bottom:20px;left:-20px;background:var(--warm);border-left:2px solid var(--gold);padding:16px 20px;max-width:220px;z-index:2;}
+.photo-verse p{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:.85rem;color:rgba(250,246,238,.7);line-height:1.6;margin-bottom:6px;}
+.photo-verse span{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);}
+
+/* MISSION */
+.section{padding:80px 40px;max-width:1100px;margin:0 auto;}
+.section-tag{font-size:.58rem;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.section-tag::before{content:"";display:block;width:28px;height:1px;background:var(--gold);}
+.section h2{font-family:"Playfair Display",serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:400;line-height:1.2;margin-bottom:20px;}
+.section h2 em{font-style:italic;color:var(--gl);}
+
+/* WHY */
+.why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:48px;}
+.why-card{background:var(--warm);padding:36px 28px;}
+.why-icon{font-size:1.8rem;margin-bottom:16px;}
+.why-title{font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.why-text{font-family:"Cormorant Garamond",serif;font-size:1rem;color:rgba(250,246,238,.6);line-height:1.85;}
+
+/* VERSE BLOCK */
+.verse-block{background:var(--warm);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:60px 40px;text-align:center;margin:60px 0;}
+.verse-block blockquote{font-family:"Playfair Display",serif;font-style:italic;font-size:clamp(1.3rem,3vw,2rem);color:var(--gl);line-height:1.7;max-width:800px;margin:0 auto 20px;}
+.verse-block cite{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(201,151,58,.6);}
+
+/* STORY */
+.story{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;margin-top:48px;}
+.story p{font-family:"Cormorant Garamond",serif;font-size:1.05rem;color:rgba(250,246,238,.65);line-height:1.9;margin-bottom:18px;}
+.story-stats{display:flex;flex-direction:column;gap:2px;}
+.stat{background:var(--warm);padding:28px 24px;display:flex;flex-direction:column;gap:6px;}
+.stat-num{font-family:"Playfair Display",serif;font-size:2.2rem;color:var(--gold);line-height:1;}
+.stat-label{font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.35);}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:16px;color:rgba(201,151,58,.3);font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;padding:0 40px;max-width:1100px;margin:0 auto;}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:rgba(201,151,58,.12);}
+
+/* FOOTER */
+.footer{background:var(--deep);border-top:1px solid var(--border);padding:40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.footer-links{display:flex;gap:24px;flex-wrap:wrap;}
+.footer-links a{font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.3);text-decoration:none;transition:color .3s;}
+.footer-links a:hover{color:var(--gold);}
+.footer-copy{font-size:.58rem;color:rgba(255,255,255,.2);letter-spacing:.1em;}
+
+@media(max-width:768px){
+  nav{padding:12px 16px;}
+  .hero-inner{padding:0 20px;text-align:center;}
+  .hero-text .tag{justify-content:center;}
+  .hero-cta{justify-content:center;}
+  .why-grid{grid-template-columns:1fr;}
+  .story{grid-template-columns:1fr;}
+  .section{padding:60px 20px;}
+  .verse-block{padding:40px 20px;}
+  .footer{padding:24px 20px;flex-direction:column;align-items:flex-start;gap:12px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">&#9670; Holy Bible Book</a>
+  <a class="nav-home" href="index.html">&#8592; Back to Bible</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <p class="tag">About</p>
+      <h1>Hi, I&rsquo;m Steve Miller &mdash; I Built <em>Holy Bible Book</em></h1>
+      <p class="lead">I&rsquo;m a web designer and developer, and I created this site out of a simple conviction &mdash; that every person on earth deserves easy access to the living Word of God, no matter who they are or where they are.</p>
+      <div class="hero-cta">
+        <a href="index.html" class="btn-gold">&#9670; &nbsp;Read the Bible</a>
+        <a href="contact.html" class="btn-outline">Get in Touch</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- WHY -->
+<div class="section">
+  <p class="section-tag">Why We Built This</p>
+  <h2>The Word of God is for <em>Everyone</em></h2>
+  <div class="why-grid">
+
+    <div class="why-card">
+      <div class="why-icon">&#9670;</div>
+      <div class="why-title">Multiple Translations</div>
+      <p class="why-text">Read in KJV, ASV, YLT, BSB, Darby, Webster, and more — all 100% public domain. Plus international translations in French, German, Haitian Creole, Russian, Japanese, and 7 other languages.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">&#10013;</div>
+      <div class="why-title">Tools for Deeper Study</div>
+      <p class="why-text">Highlights, bookmarks, reading plans, verse-by-topic browsing, and text-to-speech — built for both new believers and lifelong students of Scripture.</p>
+    </div>
+  </div>
+</div>
+
+<!-- VERSE BLOCK -->
+<div class="verse-block">
+  <blockquote>&ldquo;For God so loved the world that He gave His only begotten Son, that whoever believes in Him should not perish but have everlasting life.&rdquo;</blockquote>
+  <cite>John 3:16 &mdash; NKJV</cite>
+</div>
+
+<!-- STORY -->
+<div class="section">
+  <p class="section-tag">The Heart Behind It</p>
+  <h2>A Ministry Born from <em>Faith</em></h2>
+  <div class="story">
+    <div>
+      <p>My name is Steve Miller. I&rsquo;m a web designer, motion graphics creator, and lifelong believer. I built Holy Bible Book because I believe the Gospel has the power to change lives &mdash; not just some lives, but every life. And in a world where information is everywhere but truth is hard to find, I wanted to create a place where anyone could open their browser and find the Word of God waiting for them.</p>
+      <p>Whether you&rsquo;re someone who grew up in church, someone who has never opened a Bible, someone going through the hardest season of their life, or someone simply searching for something more &mdash; this site was built for you.</p>
+      <p>The scripture tells us in Romans 10:17 that faith comes by hearing, and hearing by the Word of God. That&rsquo;s why I added an Audio Bible, 26+ public domain translations, and a Bible game &mdash; so the Word can reach you however you receive it best.</p>
+      <p>This is not just a website. It is a mission. And every person who opens it, reads a verse, or shares it with a friend is part of spreading the Gospel to the ends of the earth.</p>
+    </div>
+    <div class="story-stats">
+      <div class="stat">
+        <span class="stat-num">66</span>
+        <span class="stat-label">Books of the Bible</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">26+</span>
+        <span class="stat-label">Translations Available</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">31,102</span>
+        <span class="stat-label">Verses of Scripture</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">&#8734;</span>
+        <span class="stat-label">Lives the Gospel Can Reach</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider">&#9670;</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-links">
+    <a href="index.html">&#9670; Home</a>
+    <a href="contact.html">Contact Us</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms of Use</a>
+  </div>
+  <span class="footer-copy">&copy; 2026 Holy Bible Book &mdash; Sharing the Gospel</span>
+</footer>
+
+</body>
+</html>

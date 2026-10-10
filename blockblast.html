@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+<title>Scripture Blocks — HolyBibleBook</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#07060f;--grid-bg:#0f0d1a;--cell:#18152a;--cell-border:#1e1b30;
+  --gold:#c9973a;--gl:#e8b84b;--cream:#faf6ee;--border:rgba(201,151,58,.2);
+  --c1:#5b3fd4;--c2:#2196c4;--c3:#1aac6a;--c4:#c4881a;--c5:#c43a3a;
+  --c6:#8b3fc4;--c7:#3a8bc4;
+}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--cream);
+  font-family:'Helvetica Neue',Arial,sans-serif;overflow:hidden;user-select:none;touch-action:none;}
+
+/* NAV */
+#nav{height:44px;background:rgba(7,6,15,.97);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;}
+#nav a{font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.35);
+  text-decoration:none;border:1px solid rgba(255,255,255,.1);padding:5px 11px;transition:all .2s;}
+#nav a:hover{border-color:var(--gold);color:var(--gold);}
+#nav-logo{font-size:.88rem;font-weight:bold;color:var(--cream);letter-spacing:.02em;}
+#nav-logo span{color:var(--gold);}
+
+/* MAIN LAYOUT */
+#app{position:fixed;top:44px;bottom:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px 8px 4px;}
+
+/* HUD */
+#hud{width:100%;max-width:380px;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-shrink:0;}
+.hud-box{text-align:center;background:var(--grid-bg);border:1px solid var(--border);padding:6px 16px;flex:1;margin:0 3px;}
+.hud-label{font-size:.42rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,151,58,.5);}
+.hud-val{font-size:1.1rem;color:var(--gold);font-weight:bold;margin-top:1px;letter-spacing:.02em;}
+
+/* VERSE TICKER */
+#verse-bar{width:100%;max-width:380px;min-height:20px;margin-bottom:6px;
+  font-style:italic;font-size:.65rem;color:rgba(201,151,58,.55);text-align:center;
+  line-height:1.4;flex-shrink:0;transition:opacity .4s;}
+
+/* GRID */
+#grid-wrap{flex-shrink:0;position:relative;}
+#grid{display:grid;gap:3px;padding:6px;background:var(--grid-bg);border:1px solid var(--border);}
+.cell{border-radius:4px;background:var(--cell);border:1px solid var(--cell-border);transition:background .1s;}
+.cell.lit{border:none;}
+.cell.flash{animation:flash .32s ease-out forwards;}
+@keyframes flash{0%{filter:brightness(2.5) saturate(1.5);}100%{filter:brightness(1);opacity:0;}}
+.cell.ghost{opacity:.3;border:1px dashed rgba(255,255,255,.3);}
+
+/* TRAY */
+#tray{width:100%;max-width:380px;display:flex;align-items:center;justify-content:space-around;
+  padding:10px 4px 4px;flex-shrink:0;gap:4px;}
+.piece-slot{flex:1;display:flex;align-items:center;justify-content:center;
+  min-height:80px;cursor:grab;position:relative;}
+.piece-slot.used{opacity:.15;pointer-events:none;}
+.piece-slot.dragging-from{opacity:.2;}
+.piece-grid{display:inline-grid;gap:3px;}
+.pcell{border-radius:4px;}
+
+/* DRAG GHOST */
+#ghost{position:fixed;pointer-events:none;z-index:999;display:none;}
+#ghost .piece-grid{gap:3px;}
+#ghost .pcell{border-radius:4px;}
+
+/* SCREENS */
+.screen{position:fixed;inset:0;top:44px;display:none;flex-direction:column;
+  align-items:center;justify-content:center;background:rgba(7,6,15,.97);z-index:50;
+  text-align:center;padding:20px;}
+.screen.on{display:flex;}
+.scr-title{font-size:clamp(2rem,7vw,3rem);font-weight:300;color:var(--gl);
+  letter-spacing:-.01em;margin-bottom:4px;}
+.scr-sub{font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;
+  color:rgba(201,151,58,.45);margin-bottom:28px;}
+.scr-verse{font-style:italic;font-size:.82rem;color:rgba(250,246,238,.4);
+  max-width:340px;line-height:1.75;margin-bottom:24px;}
+.scr-verse cite{display:block;font-style:normal;font-size:.48rem;letter-spacing:.18em;
+  text-transform:uppercase;color:rgba(201,151,58,.35);margin-top:5px;}
+.btn-play{background:var(--gold);color:#04030a;border:none;font-weight:bold;
+  font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;
+  padding:14px 40px;cursor:pointer;margin:5px;transition:background .2s;}
+.btn-play:hover{background:var(--gl);}
+.btn-out{background:none;border:1px solid rgba(201,151,58,.3);color:rgba(201,151,58,.75);
+  font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;
+  padding:12px 28px;cursor:pointer;margin:5px;transition:all .2s;}
+.btn-out:hover{border-color:var(--gold);color:var(--gold);}
+.stat-row{display:flex;gap:2px;width:100%;max-width:300px;margin-bottom:20px;}
+.stat-box{flex:1;background:rgba(201,151,58,.06);border:1px solid var(--border);padding:14px 8px;}
+.stat-n{font-size:1.6rem;color:var(--gold);font-weight:bold;}
+.stat-l{font-size:.44rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-top:3px;}
+.hi-line{font-size:.52rem;color:rgba(255,255,255,.2);margin-top:10px;}
+.gold{color:var(--gold);}
+
+/* COMBO POPUP */
+#combo-pop{position:fixed;top:28%;left:50%;transform:translate(-50%,-50%);
+  font-size:1.7rem;font-style:italic;color:var(--gl);pointer-events:none;z-index:200;
+  text-shadow:0 0 28px rgba(232,184,75,.6);opacity:0;transition:opacity .12s;font-weight:300;}
+#combo-pop.on{opacity:1;}
+
+/* HOW TO */
+.how-list{max-width:320px;text-align:left;margin:0 0 24px;font-size:.75rem;
+  line-height:2.2;color:rgba(250,246,238,.6);}
+.how-list span{color:var(--gl);font-weight:bold;}
+</style>
+</head>
+<body>
+
+<div id="nav">
+  <div id="nav-logo">&#9670; Holy<span>Bible</span>Book</div>
+  <a href="index.html">&#8592; Back</a>
+</div>
+
+<div id="app">
+  <div id="hud">
+    <div class="hud-box"><div class="hud-label">Score</div><div class="hud-val" id="hScore">0</div></div>
+    <div class="hud-box"><div class="hud-label">Best</div><div class="hud-val" id="hBest">0</div></div>
+    <div class="hud-box"><div class="hud-label">Lines</div><div class="hud-val" id="hLines">0</div></div>
+  </div>
+  <div id="verse-bar"></div>
+  <div id="grid-wrap"><div id="grid"></div></div>
+  <div id="tray"></div>
+</div>
+
+<div id="ghost"><div class="piece-grid" id="ghostGrid"></div></div>
+<div id="combo-pop"></div>
+
+<!-- HOME -->
+<div class="screen on" id="scrHome">
+  <div class="scr-title">Scripture<br>Blocks</div>
+  <div class="scr-sub">&#9670; Bible Block Puzzle &#9670;</div>
+  <div class="scr-verse">&ldquo;Thy word have I hid in mine heart, that I might not sin against thee.&rdquo;<cite>Psalm 119:11</cite></div>
+  <button class="btn-play" onclick="startGame()">&#9654; &nbsp;Play</button>
+  <button class="btn-out" onclick="showHow()">How to Play</button>
+  <div class="hi-line">Best Score: <span class="gold" id="homeHi">0</span></div>
+</div>
+
+<!-- HOW TO -->
+<div class="screen" id="scrHow">
+  <div class="scr-title" style="font-size:1.8rem;">How to Play</div>
+  <div class="how-list">
+    <div>🟦 <span>Drag blocks</span> from the bottom tray onto the grid</div>
+    <div>✅ Fill a complete <span>row or column</span> to clear it</div>
+    <div>📖 Clearing lines reveals <span>Bible verses</span></div>
+    <div>⚡ Clear <span>multiple lines at once</span> for a combo bonus!</div>
+    <div>♻️ Place all 3 pieces to get <span>3 new ones</span></div>
+    <div>❌ Game ends when <span>no piece fits</span> anywhere on the grid</div>
+    <div>🎯 Goal: keep the grid <span>as clear as possible</span>!</div>
+  </div>
+  <button class="btn-play" onclick="hideHow()">Got It!</button>
+</div>
+
+<!-- GAME OVER -->
+<div class="screen" id="scrOver">
+  <div class="scr-title" id="overTitle">Game Over</div>
+  <div class="scr-sub" id="overSub">No more moves</div>
+  <div class="stat-row">
+    <div class="stat-box"><div class="stat-n" id="oScore">0</div><div class="stat-l">Score</div></div>
+    <div class="stat-box"><div class="stat-n" id="oLines">0</div><div class="stat-l">Lines</div></div>
+    <div class="stat-box"><div class="stat-n" id="oBest">0</div><div class="stat-l">Best</div></div>
+  </div>
+  <div class="scr-verse" id="overVerse"></div>
+  <button class="btn-play" onclick="startGame()">&#9654; &nbsp;Play Again</button>
+  <button class="btn-out" onclick="goHome()">&#8592; Menu</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════
+const COLS = 8, ROWS = 8;
+const COLORS = ['#5b3fd4','#2196c4','#1aac6a','#c4881a','#c43a3a','#8b3fc4','#3a8bc4'];
+const DARK   = ['#3d29a0','#155e87','#0f7044','#895e0f','#892525','#602a8a','#255e87'];
+
+// Piece shapes — [ [row,col offsets of filled cells] ]
+const SHAPES = [
+  [[0,0]],                                      // 1x1
+  [[0,0],[0,1]],                                // 1x2 H
+  [[0,0],[1,0]],                                // 2x1 V
+  [[0,0],[0,1],[0,2]],                          // 1x3 H
+  [[0,0],[1,0],[2,0]],                          // 3x1 V
+  [[0,0],[0,1],[1,0],[1,1]],                    // 2x2
+  [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2]],        // 2x3
+  [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]],        // 3x2
+  [[0,0],[0,1],[0,2],[0,3]],                    // 1x4
+  [[0,0],[1,0],[2,0],[3,0]],                    // 4x1
+  [[0,0],[1,0],[2,0],[2,1]],                    // L
+  [[0,0],[1,0],[2,0],[2,-1]],                   // J
+  [[0,0],[0,1],[1,0]],                          // small L
+  [[0,0],[0,1],[1,1]],                          // small J
+  [[0,1],[1,0],[1,1]],                          // small L2
+  [[0,0],[1,0],[1,1]],                          // small L3
+  [[0,0],[0,1],[0,2],[1,1]],                    // T
+  [[0,0],[1,0],[1,1],[2,1]],                    // S
+  [[0,1],[1,0],[1,1],[2,0]],                    // Z
+  [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]], // 3x3
+  [[0,0],[0,1],[0,2],[0,3],[0,4]],              // 1x5
+  [[0,0],[1,0],[2,0],[3,0],[4,0]],              // 5x1
+];
+
+const VERSES = [
+  {t:"For God so loved the world that he gave his only begotten Son.",r:"John 3:16"},
+  {t:"The LORD is my shepherd; I shall not want.",r:"Psalm 23:1"},
+  {t:"I can do all things through Christ which strengtheneth me.",r:"Philippians 4:13"},
+  {t:"Thy word is a lamp unto my feet, and a light unto my path.",r:"Psalm 119:105"},
+  {t:"Trust in the LORD with all thine heart.",r:"Proverbs 3:5"},
+  {t:"Be strong and of a good courage; be not afraid.",r:"Joshua 1:9"},
+  {t:"With God all things are possible.",r:"Matthew 19:26"},
+  {t:"The joy of the LORD is your strength.",r:"Nehemiah 8:10"},
+  {t:"Greater is he that is in you than he that is in the world.",r:"1 John 4:4"},
+  {t:"Come unto me all ye that labour, and I will give you rest.",r:"Matthew 11:28"},
+  {t:"Fear thou not; for I am with thee.",r:"Isaiah 41:10"},
+  {t:"Delight thyself in the LORD and he shall give thee thy heart's desire.",r:"Psalm 37:4"},
+  {t:"In the beginning God created the heaven and the earth.",r:"Genesis 1:1"},
+  {t:"God is love.",r:"1 John 4:8"},
+  {t:"Ask and it shall be given you; seek and ye shall find.",r:"Matthew 7:7"},
+  {t:"All things work together for good to them that love God.",r:"Romans 8:28"},
+  {t:"I am the way the truth and the life.",r:"John 14:6"},
+  {t:"The truth shall make you free.",r:"John 8:32"},
+  {t:"The Lord bless thee and keep thee.",r:"Numbers 6:24"},
+  {t:"My grace is sufficient for thee.",r:"2 Corinthians 12:9"},
+];
+
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let board = [];       // [r][c] = colorIndex or -1
+let tray  = [];       // [{shape,color}] x3, null=used
+let score = 0, lines = 0, hi = 0;
+let CS    = 36;       // cell size px
+let drag  = null;     // current dragging piece
+let ghostCells = [];
+let verseIdx = 0;
+
+// ═══════════════════════════════════════
+//  LAYOUT
+// ═══════════════════════════════════════
+function calcCS() {
+  const appH = window.innerHeight - 44;
+  const hud  = document.getElementById('hud').offsetHeight   || 46;
+  const vb   = 26;
+  const trayH= 90;
+  const pad  = 20;
+  const avail = Math.min(appH - hud - vb - trayH - pad, window.innerWidth - 24);
+  CS = Math.max(26, Math.min(44, Math.floor((avail - 8 - 7*3) / COLS)));
+}
+
+function applyCS() {
+  calcCS();
+  document.querySelectorAll('.cell').forEach(el => {
+    el.style.width = el.style.height = CS + 'px';
+  });
+  const pcs = Math.round(CS * 0.72);
+  document.querySelectorAll('.pcell').forEach(el => {
+    el.style.width = el.style.height = pcs + 'px';
+  });
+  document.getElementById('grid').style.gridTemplateColumns = `repeat(${COLS},${CS}px)`;
+}
+
+window.addEventListener('resize', applyCS);
+
+// ═══════════════════════════════════════
+//  BOARD INIT & RENDER
+// ═══════════════════════════════════════
+function newBoard() {
+  board = Array.from({length:ROWS}, () => Array(COLS).fill(-1));
+}
+
+function buildGridDOM() {
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  g.style.gridTemplateColumns = `repeat(${COLS},${CS}px)`;
+  g.style.gap = '3px';
+  for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) {
+    const d=document.createElement('div');
+    d.className='cell';
+    d.id=`c${r}_${c}`;
+    d.style.width=d.style.height=CS+'px';
+    g.appendChild(d);
+  }
+}
+
+function renderBoard(ghost=[]) {
+  const gs = new Set(ghost.map(({r,c})=>`${r},${c}`));
+  for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) {
+    const el = document.getElementById(`c${r}_${c}`);
+    if (!el) continue;
+    const ci = board[r][c];
+    const key = `${r},${c}`;
+    el.classList.remove('lit','ghost','flash');
+    if (ci >= 0) {
+      el.classList.add('lit');
+      el.style.background = COLORS[ci];
+      el.style.boxShadow  = `inset 0 -3px 0 ${DARK[ci]}`;
+    } else if (gs.has(key) && drag) {
+      el.classList.add('ghost','lit');
+      el.style.background = COLORS[drag.color] + '55';
+      el.style.boxShadow  = 'none';
+    } else {
+      el.style.background = '';
+      el.style.boxShadow  = '';
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+//  PIECE GENERATION & TRAY
+// ═══════════════════════════════════════
+function rndPiece() {
+  const shape = SHAPES[Math.floor(Math.random()*SHAPES.length)];
+  const color = Math.floor(Math.random()*COLORS.length);
+  return {shape, color};
+}
+
+function fillTray() {
+  tray = [rndPiece(), rndPiece(), rndPiece()];
+  renderTray();
+}
+
+function renderTray() {
+  const trayEl = document.getElementById('tray');
+  trayEl.innerHTML = '';
+  const pcs = Math.round(CS * 0.72);
+  tray.forEach((piece, idx) => {
+    const slot = document.createElement('div');
+    slot.className = 'piece-slot' + (piece ? '' : ' used');
+    slot.id = `slot${idx}`;
+    if (piece) {
+      // Find bounding box
+      const rs = piece.shape.map(([r])=>r), cs2 = piece.shape.map(([,c])=>c);
+      const minR=Math.min(...rs), maxR=Math.max(...rs);
+      const minC=Math.min(...cs2), maxC=Math.max(...cs2);
+      const rows=maxR-minR+1, cols=maxC-minC+1;
+      const pg = document.createElement('div');
+      pg.className='piece-grid';
+      pg.style.gridTemplateColumns=`repeat(${cols},${pcs}px)`;
+      pg.style.gap='3px';
+      // Build grid
+      for (let r=0;r<rows;r++) {
+        for (let c=0;c<cols;c++) {
+          const d=document.createElement('div');
+          d.className='pcell';
+          d.style.width=d.style.height=pcs+'px';
+          const filled=piece.shape.some(([sr,sc])=>sr-minR===r&&sc-minC===c);
+          if (filled) {
+            d.style.background=COLORS[piece.color];
+            d.style.boxShadow=`inset 0 -3px 0 ${DARK[piece.color]}`;
+          } else {
+            d.style.background='transparent';
+          }
+          pg.appendChild(d);
+        }
+      }
+      slot.appendChild(pg);
+      slot.addEventListener('mousedown',  e=>startDrag(e,idx,false));
+      slot.addEventListener('touchstart', e=>startDrag(e,idx,true),{passive:false});
+    }
+    trayEl.appendChild(slot);
+  });
+}
+
+// ═══════════════════════════════════════
+//  DRAG & DROP
+// ═══════════════════════════════════════
+function startDrag(e, idx, isTouch) {
+  if (!tray[idx]) return;
+  e.preventDefault();
+  drag = {...tray[idx], idx};
+  document.getElementById(`slot${idx}`).classList.add('dragging-from');
+  buildGhostDOM();
+  const pos = isTouch ? {x:e.touches[0].clientX, y:e.touches[0].clientY}
+                       : {x:e.clientX, y:e.clientY};
+  moveGhost(pos.x, pos.y);
+  document.getElementById('ghost').style.display='block';
+  if (isTouch) {
+    document.addEventListener('touchmove', onTMove, {passive:false});
+    document.addEventListener('touchend',  onTEnd,  {passive:false});
+  } else {
+    document.addEventListener('mousemove', onMMove);
+    document.addEventListener('mouseup',   onMUp);
+  }
+}
+
+function buildGhostDOM() {
+  const pcs = Math.round(CS * 0.75);
+  const gg = document.getElementById('ghostGrid');
+  gg.innerHTML='';
+  const rs = drag.shape.map(([r])=>r), cs2=drag.shape.map(([,c])=>c);
+  const minR=Math.min(...rs), maxR=Math.max(...rs);
+  const minC=Math.min(...cs2), maxC=Math.max(...cs2);
+  const rows=maxR-minR+1, cols=maxC-minC+1;
+  gg.style.gridTemplateColumns=`repeat(${cols},${pcs}px)`;
+  gg.style.gap='3px';
+  for (let r=0;r<rows;r++) for (let c=0;c<cols;c++) {
+    const d=document.createElement('div');
+    d.className='pcell';
+    d.style.width=d.style.height=pcs+'px';
+    const filled=drag.shape.some(([sr,sc])=>sr-minR===r&&sc-minC===c);
+    d.style.background=filled?COLORS[drag.color]:'transparent';
+    if(filled)d.style.boxShadow=`inset 0 -3px 0 ${DARK[drag.color]}`;
+    gg.appendChild(d);
+  }
+}
+
+function onMMove(e){moveGhost(e.clientX,e.clientY);}
+function onTMove(e){e.preventDefault();moveGhost(e.touches[0].clientX,e.touches[0].clientY);}
+function onMUp(e){dropPiece(e.clientX,e.clientY);cleanup(false);}
+function onTEnd(e){e.preventDefault();dropPiece(e.changedTouches[0].clientX,e.changedTouches[0].clientY);cleanup(true);}
+
+function moveGhost(x, y) {
+  // On mobile offset upward so finger doesn't cover piece
+  const yOff = (window.innerWidth < 600) ? -CS*1.8 : -CS*0.6;
+  const gh = document.getElementById('ghost');
+  gh.style.left = x + 'px';
+  gh.style.top  = (y + yOff) + 'px';
+  gh.style.transform = 'translate(-50%,-50%) scale(1.08)';
+
+  const gc = xyToGrid(x, y + yOff);
+  ghostCells = gc ? getAbsCells(drag.shape, gc.r, gc.c) : [];
+  renderBoard(ghostCells);
+}
+
+function dropPiece(x, y) {
+  const yOff = (window.innerWidth < 600) ? -CS*1.8 : -CS*0.6;
+  const gc = xyToGrid(x, y + yOff);
+  if (gc) {
+    const cells = getAbsCells(drag.shape, gc.r, gc.c);
+    if (canPlace(cells)) {
+      place(cells);
+      tray[drag.idx] = null;
+      document.getElementById(`slot${drag.idx}`).classList.add('used');
+    }
+  }
+  ghostCells = [];
+  renderBoard([]);
+}
+
+function cleanup(isTouch) {
+  document.getElementById('ghost').style.display='none';
+  if (isTouch) {
+    document.removeEventListener('touchmove', onTMove);
+    document.removeEventListener('touchend',  onTEnd);
+  } else {
+    document.removeEventListener('mousemove', onMMove);
+    document.removeEventListener('mouseup',   onMUp);
+  }
+  const slot = document.getElementById(`slot${drag.idx}`);
+  if (slot) slot.classList.remove('dragging-from');
+  drag = null;
+  // Refill if all used
+  if (tray.every(p=>!p)) setTimeout(()=>{fillTray();checkOver();},180);
+  else checkOver();
+}
+
+// ═══════════════════════════════════════
+//  GRID HELPERS
+// ═══════════════════════════════════════
+function xyToGrid(x, y) {
+  const gEl  = document.getElementById('grid');
+  const rect = gEl.getBoundingClientRect();
+  const step = CS + 3;
+  // Offset so piece centers on cursor
+  const rs   = drag.shape.map(([r])=>r), cs2=drag.shape.map(([,c])=>c);
+  const rows = Math.max(...rs)-Math.min(...rs)+1;
+  const cols = Math.max(...cs2)-Math.min(...cs2)+1;
+  const relX = x - rect.left - 6 - (cols/2)*step;
+  const relY = y - rect.top  - 6 - (rows/2)*step;
+  const c = Math.round(relX/step);
+  const r = Math.round(relY/step);
+  return {r,c};
+}
+
+function getAbsCells(shape, startR, startC) {
+  return shape.map(([dr,dc])=>({r:startR+dr, c:startC+dc}));
+}
+
+function canPlace(cells) {
+  return cells.every(({r,c})=>r>=0&&r<ROWS&&c>=0&&c<COLS&&board[r][c]<0);
+}
+
+function place(cells) {
+  cells.forEach(({r,c})=>{ board[r][c]=drag.color; });
+  renderBoard([]);
+  clearLines();
+}
+
+// ═══════════════════════════════════════
+//  LINE CLEARING
+// ═══════════════════════════════════════
+function clearLines() {
+  const fullRows=[],fullCols=[];
+  for(let r=0;r<ROWS;r++) if(board[r].every(v=>v>=0)) fullRows.push(r);
+  for(let c=0;c<COLS;c++) if(board.every(row=>row[c]>=0)) fullCols.push(c);
+  const total=fullRows.length+fullCols.length;
+  if(!total){updateHUD();return;}
+
+  // Flash
+  const toFlash=new Set();
+  fullRows.forEach(r=>{ for(let c=0;c<COLS;c++) toFlash.add(`${r},${c}`); });
+  fullCols.forEach(c=>{ for(let r=0;r<ROWS;r++) toFlash.add(`${r},${c}`); });
+  toFlash.forEach(key=>{
+    const [r,c]=key.split(',');
+    const el=document.getElementById(`c${r}_${c}`);
+    if(el){el.classList.add('flash');}
+  });
+
+  setTimeout(()=>{
+    fullRows.forEach(r=>{ for(let c=0;c<COLS;c++) board[r][c]=-1; });
+    fullCols.forEach(c=>{ for(let r=0;r<ROWS;r++) board[r][c]=-1; });
+    renderBoard([]);
+
+    // Score: base 80pts per line, x total for combo
+    const pts = total*80*(total>1?total:1);
+    score+=pts; lines+=total;
+    if(score>hi){hi=score;localStorage.setItem('sb3_hi',hi);}
+    updateHUD();
+
+    if(total>=2) showCombo(total,pts);
+    showVerse();
+  },340);
+}
+
+function showCombo(n,pts) {
+  const labels=['','','DOUBLE!','TRIPLE!','QUAD!','ULTRA!'];
+  const pop=document.getElementById('combo-pop');
+  pop.textContent=(labels[n]||'COMBO!')+' +'+pts;
+  pop.classList.add('on');
+  setTimeout(()=>pop.classList.remove('on'),1100);
+}
+
+function showVerse() {
+  const v=VERSES[verseIdx%VERSES.length]; verseIdx++;
+  const vb=document.getElementById('verse-bar');
+  vb.style.opacity='0';
+  setTimeout(()=>{
+    vb.innerHTML=`\u201c${v.t}\u201d \u2014 <em>${v.r}</em>`;
+    vb.style.opacity='1';
+  },120);
+}
+
+// ═══════════════════════════════════════
+//  GAME OVER
+// ═══════════════════════════════════════
+function checkOver() {
+  const active=tray.filter(Boolean);
+  if(!active.length) return;
+  const anyFits=active.some(p=>{
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) {
+      const cells=getAbsCells(p.shape,r,c);
+      if(canPlace(cells)) return true;
+    }
+    return false;
+  });
+  if(!anyFits) setTimeout(gameOver,350);
+}
+
+function gameOver() {
+  const v=VERSES[Math.floor(Math.random()*VERSES.length)];
+  document.getElementById('overTitle').textContent = score>=hi&&score>0?'New Best! 🏆':'Game Over';
+  document.getElementById('overSub').textContent   = 'No more moves';
+  document.getElementById('oScore').textContent    = score.toLocaleString();
+  document.getElementById('oLines').textContent    = lines;
+  document.getElementById('oBest').textContent     = hi.toLocaleString();
+  document.getElementById('overVerse').innerHTML   = `\u201c${v.t}\u201d<cite>${v.r}</cite>`;
+  document.getElementById('scrOver').classList.add('on');
+}
+
+// ═══════════════════════════════════════
+//  HUD
+// ═══════════════════════════════════════
+function updateHUD() {
+  document.getElementById('hScore').textContent = score.toLocaleString();
+  document.getElementById('hBest').textContent  = hi.toLocaleString();
+  document.getElementById('hLines').textContent = lines;
+}
+
+// ═══════════════════════════════════════
+//  GAME FLOW
+// ═══════════════════════════════════════
+function startGame() {
+  ['scrHome','scrOver','scrHow'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  newBoard(); score=0; lines=0; verseIdx=0;
+  calcCS(); buildGridDOM(); fillTray(); updateHUD();
+  document.getElementById('verse-bar').textContent='';
+  showVerse();
+}
+
+function goHome() {
+  document.getElementById('scrOver').classList.remove('on');
+  document.getElementById('scrHome').classList.add('on');
+  document.getElementById('homeHi').textContent=hi.toLocaleString();
+}
+function showHow(){document.getElementById('scrHome').classList.remove('on');document.getElementById('scrHow').classList.add('on');}
+function hideHow(){document.getElementById('scrHow').classList.remove('on');document.getElementById('scrHome').classList.add('on');}
+
+// ═══════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════
+hi=parseInt(localStorage.getItem('sb3_hi')||'0');
+document.getElementById('homeHi').textContent=hi.toLocaleString();
+document.getElementById('hBest').textContent=hi.toLocaleString();
+calcCS();
+</script>
+</body>
+</html>

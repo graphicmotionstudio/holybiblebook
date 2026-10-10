@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Bible study games — quiz, trivia, and flashcards to help you learn and memorize Scripture.">
+<title>Bible Study Games | Holy Bible Book</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Didact+Gothic&display=swap" rel="stylesheet">
+<style>
+:root{--black:#0a0806;--deep:#111009;--warm:#1c1810;--gold:#c9973a;--gl:#e2b96a;--cream:#faf6ee;--border:rgba(201,151,58,0.2);--correct:#4caf7d;--wrong:#c0392b;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--black);color:var(--cream);font-family:"Didact Gothic",sans-serif;min-height:100vh;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,8,6,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-family:"Playfair Display",serif;font-size:.95rem;color:var(--gl);text-decoration:none;letter-spacing:.06em;}
+.nav-back{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.4);text-decoration:none;border:1px solid rgba(255,255,255,.1);padding:7px 16px;transition:all .3s;}
+.nav-back:hover{border-color:var(--gold);color:var(--gold);}
+
+/* HERO */
+.page-hero{padding:100px 40px 40px;text-align:center;max-width:800px;margin:0 auto;}
+.page-tag{font-size:.58rem;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:12px;}
+.page-tag::before,.page-tag::after{content:"";display:block;width:28px;height:1px;background:var(--gold);}
+.page-hero h1{font-family:"Playfair Display",serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:400;line-height:1.15;margin-bottom:16px;}
+.page-hero h1 em{font-style:italic;color:var(--gl);}
+.page-hero p{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:1.1rem;color:rgba(250,246,238,.5);line-height:1.8;}
+
+/* GAME SELECTOR */
+.game-select{display:flex;gap:2px;justify-content:center;padding:32px 40px 0;max-width:900px;margin:0 auto;}
+.game-tab{flex:1;background:var(--warm);border:none;color:rgba(250,246,238,.35);font-family:"Didact Gothic",sans-serif;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;padding:18px 10px;cursor:pointer;transition:all .25s;border-bottom:2px solid transparent;}
+.game-tab.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(201,151,58,.08);}
+.game-tab:hover:not(.active){color:rgba(250,246,238,.6);}
+.game-icon{font-size:1.3rem;display:block;margin-bottom:6px;}
+
+/* GAME PANELS */
+.game-panels{max-width:900px;margin:0 auto;padding:0 40px 80px;}
+.game-panel{display:none;padding-top:32px;}
+.game-panel.active{display:block;}
+
+/* CARD CONTAINER */
+.game-card{background:var(--warm);border:1px solid var(--border);padding:40px;}
+
+/* SCORE BAR */
+.score-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.score-item{text-align:center;}
+.score-num{font-family:"Playfair Display",serif;font-size:1.6rem;color:var(--gold);display:block;line-height:1;}
+.score-lbl{font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-top:4px;display:block;}
+.progress-bar{flex:1;height:3px;background:rgba(255,255,255,.06);margin:0 20px;position:relative;}
+.progress-fill{height:100%;background:var(--gold);transition:width .4s ease;}
+
+/* QUESTION */
+.q-tag{font-size:.52rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+.q-text{font-family:"Playfair Display",serif;font-size:clamp(1.1rem,2.5vw,1.5rem);font-weight:400;line-height:1.45;margin-bottom:28px;color:var(--cream);}
+
+/* ANSWERS */
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px;}
+.ans-btn{background:rgba(255,255,255,.03);border:1px solid var(--border);color:rgba(250,246,238,.7);font-family:"Cormorant Garamond",serif;font-size:1rem;padding:16px 20px;text-align:left;cursor:pointer;transition:all .2s;line-height:1.4;}
+.ans-btn:hover:not(:disabled){border-color:var(--gold);color:var(--cream);background:rgba(201,151,58,.06);}
+.ans-btn.correct{border-color:var(--correct);background:rgba(76,175,125,.12);color:#7dd9a8;}
+.ans-btn.wrong{border-color:var(--wrong);background:rgba(192,57,43,.12);color:#e07b72;}
+.ans-btn:disabled{cursor:default;}
+
+/* FEEDBACK */
+.feedback{min-height:48px;margin-bottom:20px;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:1rem;color:rgba(250,246,238,.5);line-height:1.6;padding:12px 16px;border-left:2px solid transparent;transition:all .3s;}
+.feedback.show-correct{border-left-color:var(--correct);color:rgba(125,217,168,.8);}
+.feedback.show-wrong{border-left-color:var(--wrong);color:rgba(224,123,114,.8);}
+
+/* NEXT BTN */
+.next-btn{background:var(--gold);color:var(--black);border:none;font-family:"Didact Gothic",sans-serif;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;padding:14px 32px;cursor:pointer;transition:background .2s;display:none;}
+.next-btn:hover{background:var(--gl);}
+.next-btn.visible{display:inline-block;}
+
+/* RESULT SCREEN */
+.result-screen{display:none;text-align:center;padding:20px 0;}
+.result-screen.visible{display:block;}
+.result-emoji{font-size:3rem;margin-bottom:16px;}
+.result-title{font-family:"Playfair Display",serif;font-size:2rem;font-weight:400;color:var(--gl);margin-bottom:8px;}
+.result-sub{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:1.1rem;color:rgba(250,246,238,.5);margin-bottom:28px;}
+.result-score{font-family:"Playfair Display",serif;font-size:3.5rem;color:var(--gold);margin-bottom:8px;}
+.result-score span{font-size:1.2rem;color:rgba(250,246,238,.3);}
+.restart-btn{background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:"Didact Gothic",sans-serif;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;padding:14px 32px;cursor:pointer;transition:all .2s;}
+.restart-btn:hover{background:var(--gold);color:var(--black);}
+
+/* FLASHCARDS */
+.fc-scene{perspective:1000px;margin-bottom:28px;}
+.fc-card{width:100%;min-height:220px;position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,0,.2,1);cursor:pointer;}
+.fc-card.flipped{transform:rotateY(180deg);}
+.fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;text-align:center;}
+.fc-front{background:var(--warm);border:1px solid var(--border);}
+.fc-back{background:linear-gradient(135deg,#1c1810,#111009);border:1px solid rgba(201,151,58,.35);transform:rotateY(180deg);}
+.fc-label{font-size:.5rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;opacity:.7;}
+.fc-front-text{font-family:"Playfair Display",serif;font-size:clamp(1rem,2.5vw,1.4rem);font-weight:400;color:var(--cream);line-height:1.5;}
+.fc-back-text{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(1rem,2.5vw,1.3rem);color:rgba(250,246,238,.85);line-height:1.7;}
+.fc-hint{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.2);margin-top:12px;}
+.fc-controls{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;}
+.fc-btn{background:transparent;border:1px solid var(--border);color:rgba(250,246,238,.4);font-family:"Didact Gothic",sans-serif;font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;padding:11px 22px;cursor:pointer;transition:all .2s;}
+.fc-btn:hover{border-color:var(--gold);color:var(--gold);}
+.fc-btn.knew{border-color:var(--correct);color:#7dd9a8;}
+.fc-btn.knew:hover{background:rgba(76,175,125,.15);}
+.fc-counter{font-size:.55rem;letter-spacing:.15em;color:rgba(255,255,255,.2);text-transform:uppercase;}
+.fc-progress{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap;justify-content:center;}
+.fc-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.1);transition:background .3s;}
+.fc-dot.known{background:var(--correct);}
+.fc-dot.current{background:var(--gold);}
+
+/* TRIVIA DIFFICULTY */
+.diff-select{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap;}
+.diff-btn{background:transparent;border:1px solid var(--border);color:rgba(250,246,238,.35);font-family:"Didact Gothic",sans-serif;font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;padding:8px 18px;cursor:pointer;transition:all .2s;}
+.diff-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(201,151,58,.08);}
+
+/* CATEGORY BADGE */
+.cat-badge{display:inline-block;font-size:.48rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(201,151,58,.6);border:1px solid rgba(201,151,58,.2);padding:3px 10px;margin-bottom:16px;}
+
+/* FOOTER */
+.footer{background:var(--deep);border-top:1px solid var(--border);padding:32px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.footer-links{display:flex;gap:24px;flex-wrap:wrap;}
+.footer-links a{font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.3);text-decoration:none;transition:color .3s;}
+.footer-links a:hover{color:var(--gold);}
+.footer-copy{font-size:.58rem;color:rgba(255,255,255,.2);}
+
+@media(max-width:600px){
+  nav{padding:12px 16px;}
+  .page-hero{padding:80px 20px 32px;}
+  .game-select{padding:24px 20px 0;}
+  .game-tab{font-size:.48rem;padding:14px 6px;}
+  .game-panels{padding:0 20px 60px;}
+  .game-card{padding:24px 20px;}
+  .answers{grid-template-columns:1fr;}
+  .footer{padding:24px 20px;flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">&#9670; Holy Bible Book</a>
+  <a class="nav-back" href="index.html">&#8592; Back to Bible</a>
+</nav>
+
+<div class="page-hero">
+  <p class="page-tag">Study Tools</p>
+  <h1>Bible <em>Games &amp; Study</em></h1>
+  <p>Test your knowledge, explore Scripture, and strengthen your memory through interactive study tools.</p>
+</div>
+
+<!-- TABS -->
+<div class="game-select">
+  <button class="game-tab active" onclick="switchGame('quiz')">
+    <span class="game-icon">&#9646;&#9646;</span>Bible Quiz
+  </button>
+  <button class="game-tab" onclick="switchGame('trivia')">
+    <span class="game-icon">&#9670;</span>Trivia
+  </button>
+  <button class="game-tab" onclick="switchGame('flash')">
+    <span class="game-icon">&#9651;</span>Flashcards
+  </button>
+</div>
+
+<!-- PANELS -->
+<div class="game-panels">
+
+  <!-- ── QUIZ ── -->
+  <div class="game-panel active" id="panel-quiz">
+    <div class="game-card">
+      <div id="quiz-main">
+        <div class="score-bar">
+          <div class="score-item"><span class="score-num" id="q-score">0</span><span class="score-lbl">Score</span></div>
+          <div class="progress-bar"><div class="progress-fill" id="q-progress" style="width:0%"></div></div>
+          <div class="score-item"><span class="score-num" id="q-num">1<small style="font-size:.9rem;color:rgba(255,255,255,.2)">/15</small></span><span class="score-lbl">Question</span></div>
+        </div>
+        <div class="q-tag" id="q-tag">Old Testament</div>
+        <div class="q-text" id="q-text">Loading question...</div>
+        <div class="answers" id="q-answers"></div>
+        <div class="feedback" id="q-feedback"></div>
+        <button class="next-btn" id="q-next" onclick="quizNext()">Next Question &#8594;</button>
+      </div>
+      <div class="result-screen" id="quiz-result">
+        <div class="result-emoji" id="quiz-emoji">&#127775;</div>
+        <div class="result-title">Quiz Complete!</div>
+        <div class="result-sub" id="quiz-result-sub"></div>
+        <div class="result-score" id="quiz-result-score">0<span>/15</span></div>
+        <br><br>
+        <button class="restart-btn" onclick="startQuiz()">&#9670; &nbsp;Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TRIVIA ── -->
+  <div class="game-panel" id="panel-trivia">
+    <div class="game-card">
+      <div id="trivia-main">
+        <div class="score-bar">
+          <div class="score-item"><span class="score-num" id="t-score">0</span><span class="score-lbl">Score</span></div>
+          <div class="progress-bar"><div class="progress-fill" id="t-progress" style="width:0%"></div></div>
+          <div class="score-item"><span class="score-num" id="t-num">1<small style="font-size:.9rem;color:rgba(255,255,255,.2)">/15</small></span><span class="score-lbl">Question</span></div>
+        </div>
+        <div class="diff-select">
+          <button class="diff-btn active" onclick="setDiff('easy',this)">Easy</button>
+          <button class="diff-btn" onclick="setDiff('medium',this)">Medium</button>
+          <button class="diff-btn" onclick="setDiff('hard',this)">Hard</button>
+        </div>
+        <div class="cat-badge" id="t-cat">People of the Bible</div>
+        <div class="q-text" id="t-text">Loading question...</div>
+        <div class="answers" id="t-answers"></div>
+        <div class="feedback" id="t-feedback"></div>
+        <button class="next-btn" id="t-next" onclick="triviaNext()">Next &#8594;</button>
+      </div>
+      <div class="result-screen" id="trivia-result">
+        <div class="result-emoji" id="trivia-emoji">&#127775;</div>
+        <div class="result-title">Trivia Complete!</div>
+        <div class="result-sub" id="trivia-result-sub"></div>
+        <div class="result-score" id="trivia-result-score">0<span>/15</span></div>
+        <br><br>
+        <button class="restart-btn" onclick="startTrivia()">&#9670; &nbsp;Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FLASHCARDS ── -->
+  <div class="game-panel" id="panel-flash">
+    <div class="game-card">
+      <div class="fc-progress" id="fc-dots"></div>
+      <div class="fc-scene">
+        <div class="fc-card" id="fc-card" onclick="flipCard()">
+          <div class="fc-front">
+            <div class="fc-label">Verse Reference</div>
+            <div class="fc-front-text" id="fc-ref">Loading...</div>
+            <div class="fc-hint">Tap to reveal verse</div>
+          </div>
+          <div class="fc-back">
+            <div class="fc-label">Scripture</div>
+            <div class="fc-back-text" id="fc-verse"></div>
+          </div>
+        </div>
+      </div>
+      <div class="fc-controls">
+        <button class="fc-btn" onclick="fcPrev()">&#8592; Prev</button>
+        <span class="fc-counter" id="fc-counter">1 / 15</span>
+        <button class="fc-btn" onclick="fcNext()">Next &#8592;</button>
+        <button class="fc-btn knew" onclick="markKnown()">&#10003; I Know This</button>
+        <button class="fc-btn" onclick="shuffleCards()">&#8645; Shuffle</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <div class="footer-links">
+    <a href="index.html">&#9670; Home</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+  </div>
+  <span class="footer-copy">&copy; 2026 Holy Bible Book</span>
+</footer>
+
+<script>
+// ══ TAB SWITCHING ══
+function switchGame(name) {
+  document.querySelectorAll('.game-tab').forEach((t,i)=>{
+    t.classList.toggle('active', ['quiz','trivia','flash'][i]===name);
+  });
+  document.querySelectorAll('.game-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+}
+
+// ══════════════════════════════
+//  QUIZ DATA
+// ══════════════════════════════
+const QUIZ_Qs = [
+  // === ORIGINAL 15 ===
+  {cat:'Old Testament',q:'How many days did God take to create the world?',a:['6','7','10','40'],c:0,x:'God created the world in 6 days and rested on the 7th (Genesis 1).'},
+  {cat:'New Testament',q:'Where was Jesus born?',a:['Nazareth','Jerusalem','Bethlehem','Jericho'],c:2,x:'Jesus was born in Bethlehem of Judea (Matthew 2:1).'},
+  {cat:'Old Testament',q:'Who was swallowed by a great fish?',a:['Elijah','Jonah','Moses','Daniel'],c:1,x:'Jonah was swallowed by a great fish for three days and nights (Jonah 1:17).'},
+  {cat:'New Testament',q:'How many disciples did Jesus choose?',a:['7','10','12','14'],c:2,x:'Jesus chose twelve disciples (Matthew 10:1–4).'},
+  {cat:'Old Testament',q:'What did God command Noah to build?',a:['A temple','An ark','A tower','A city'],c:1,x:'God commanded Noah to build an ark to survive the flood (Genesis 6:14).'},
+  {cat:'New Testament',q:'Who baptized Jesus?',a:['Peter','Paul','John the Baptist','Elijah'],c:2,x:'John the Baptist baptized Jesus in the Jordan River (Matthew 3:13–17).'},
+  {cat:'Old Testament',q:'What was the name of Adam\'s first son?',a:['Abel','Seth','Cain','Enoch'],c:2,x:'Cain was the firstborn son of Adam and Eve (Genesis 4:1).'},
+  {cat:'New Testament',q:'On what day did Jesus rise from the dead?',a:['First day','Second day','Third day','Seventh day'],c:2,x:'Jesus rose from the dead on the third day (1 Corinthians 15:4).'},
+  {cat:'Old Testament',q:'Which king of Israel wrote most of the Psalms?',a:['Solomon','Saul','David','Hezekiah'],c:2,x:'King David wrote most of the Psalms (Psalm 72:20).'},
+  {cat:'New Testament',q:'What did Jesus turn water into at Cana?',a:['Milk','Oil','Wine','Honey'],c:2,x:'Jesus turned water into wine at the wedding in Cana — his first miracle (John 2:1–11).'},
+  {cat:'Old Testament',q:'How many plagues did God send on Egypt?',a:['7','8','10','12'],c:2,x:'God sent ten plagues on Egypt to free the Israelites (Exodus 7–12).'},
+  {cat:'New Testament',q:'Who wrote most of the New Testament letters?',a:['Peter','John','Paul','James'],c:2,x:'The Apostle Paul wrote 13 of the 27 books of the New Testament.'},
+  {cat:'People',q:'Who was the first king of Israel?',a:['David','Solomon','Saul','Samuel'],c:2,x:'Saul was anointed as the first king of Israel by the prophet Samuel (1 Samuel 10:1).'},
+  {cat:'People',q:'Which disciple denied Jesus three times?',a:['Judas','Thomas','John','Peter'],c:3,x:'Peter denied knowing Jesus three times before the rooster crowed (Matthew 26:69–75).'},
+  {cat:'People',q:'Who was thrown into the lion\'s den?',a:['Shadrach','Daniel','Elijah','Ezekiel'],c:1,x:'Daniel was thrown into the lion\'s den for praying to God (Daniel 6).'},
+  // === NEW BATCH — OLD TESTAMENT ===
+  {cat:'Old Testament',q:'What river did Moses part to lead the Israelites out of Egypt?',a:['Nile','Jordan','Red Sea','Euphrates'],c:2,x:'God parted the Red Sea through Moses so Israel could cross on dry ground (Exodus 14:21).'},
+  {cat:'Old Testament',q:'What fruit did Eve eat in the Garden of Eden?',a:['Apple','Fig','Pomegranate','Fruit of the tree of knowledge'],c:3,x:'The Bible calls it fruit from the tree of the knowledge of good and evil — never specifies an apple (Genesis 3:6).'},
+  {cat:'Old Testament',q:'Who was the strongest man in the Bible?',a:['David','Goliath','Samson','Saul'],c:2,x:'Samson\'s supernatural strength came from his Nazirite vow and uncut hair (Judges 13–16).'},
+  {cat:'Old Testament',q:'What is the first book of the Bible?',a:['Exodus','Psalms','Genesis','Proverbs'],c:2,x:'Genesis is the first book of the Bible, meaning "beginning" (Genesis 1:1).'},
+  {cat:'Old Testament',q:'How many books are in the Old Testament?',a:['27','33','39','45'],c:2,x:'There are 39 books in the Old Testament.'},
+  {cat:'Old Testament',q:'Who interpreted Pharaoh\'s dream about fat and thin cows?',a:['Moses','Daniel','Joseph','Elijah'],c:2,x:'Joseph interpreted Pharaoh\'s dream, predicting 7 years of plenty then 7 years of famine (Genesis 41).'},
+  {cat:'Old Testament',q:'What did Elijah call down from heaven on Mount Carmel?',a:['Rain','Angels','Fire','Thunder'],c:2,x:'Elijah called fire down from heaven to consume his sacrifice, proving God\'s power over Baal (1 Kings 18:38).'},
+  {cat:'Old Testament',q:'Which prophet was taken to heaven in a chariot of fire?',a:['Elisha','Isaiah','Moses','Elijah'],c:3,x:'Elijah was taken up to heaven in a whirlwind with a chariot of fire (2 Kings 2:11).'},
+  {cat:'Old Testament',q:'Who was the oldest person in the Bible?',a:['Noah','Adam','Enoch','Methuselah'],c:3,x:'Methuselah lived 969 years — the oldest recorded person in Scripture (Genesis 5:27).'},
+  {cat:'Old Testament',q:'What did the dove bring back to Noah\'s ark?',a:['A reed','An olive branch','A fig leaf','Nothing'],c:1,x:'The dove returned with an olive leaf, signaling the waters had receded (Genesis 8:11).'},
+  {cat:'Old Testament',q:'How many sons did Jacob have?',a:['10','11','12','14'],c:2,x:'Jacob had 12 sons, who became the 12 tribes of Israel (Genesis 35:22).'},
+  {cat:'Old Testament',q:'Which Israelite judge was a woman?',a:['Ruth','Esther','Deborah','Miriam'],c:2,x:'Deborah was a prophetess and the only female judge of Israel (Judges 4:4).'},
+  {cat:'Old Testament',q:'What did God give Moses on Mount Sinai?',a:['A scroll','The Ten Commandments','A sword','Manna'],c:1,x:'God gave Moses the Ten Commandments on stone tablets on Mount Sinai (Exodus 20).'},
+  {cat:'Old Testament',q:'Who was Abraham\'s wife?',a:['Rebekah','Rachel','Leah','Sarah'],c:3,x:'Sarah was Abraham\'s wife, and she bore him Isaac in her old age (Genesis 17:15–19).'},
+  {cat:'Old Testament',q:'What job did David have before becoming king?',a:['Soldier','Carpenter','Shepherd','Priest'],c:2,x:'David was a shepherd boy who tended his father Jesse\'s flock (1 Samuel 16:11).'},
+  // === NEW BATCH — NEW TESTAMENT ===
+  {cat:'New Testament',q:'Who was the first apostle Jesus called?',a:['John','Andrew','Peter','James'],c:1,x:'Andrew was the first called; he then brought his brother Peter to Jesus (John 1:40–42).'},
+  {cat:'New Testament',q:'What did Jesus say are the two greatest commandments?',a:['Honor your parents and keep the Sabbath','Love God and love your neighbor','Do not steal and do not lie','Pray without ceasing and give to the poor'],c:1,x:'Jesus summarized the Law as loving God with all your heart, and loving your neighbor as yourself (Matthew 22:37–39).'},
+  {cat:'New Testament',q:'In what language was most of the New Testament originally written?',a:['Latin','Hebrew','Aramaic','Greek'],c:3,x:'The New Testament was originally written in Koine Greek, the common language of the first-century Roman world.'},
+  {cat:'New Testament',q:'How many books are in the New Testament?',a:['22','25','27','30'],c:2,x:'There are 27 books in the New Testament.'},
+  {cat:'New Testament',q:'What was the name of the island where John wrote Revelation?',a:['Cyprus','Malta','Crete','Patmos'],c:3,x:'The Apostle John wrote Revelation while exiled on the island of Patmos (Revelation 1:9).'},
+  {cat:'New Testament',q:'Who visited Jesus at night and asked about being born again?',a:['Joseph of Arimathea','Nicodemus','Simon of Cyrene','Zacchaeus'],c:1,x:'Nicodemus, a Pharisee, came to Jesus by night and heard about being born of water and Spirit (John 3:1–7).'},
+  {cat:'New Testament',q:'What were Jesus\' final words on the cross according to John?',a:['Father forgive them','My God why have you forsaken me','It is finished','Into your hands I commit my spirit'],c:2,x:'Jesus\' final words in John\'s Gospel were "It is finished" — tetelestai in Greek (John 19:30).'},
+  {cat:'New Testament',q:'What gift did the Holy Spirit give on the day of Pentecost?',a:['Healing','Speaking in tongues','Prophecy','Visions'],c:1,x:'On Pentecost the disciples began speaking in other tongues as the Spirit enabled them (Acts 2:4).'},
+  {cat:'People',q:'Who helped Jesus carry his cross?',a:['John','Barabbas','Simon of Cyrene','Joseph of Arimathea'],c:2,x:'Simon of Cyrene was compelled to carry Jesus\' cross to Golgotha (Matthew 27:32).'},
+  {cat:'People',q:'Which woman was the first to see the risen Jesus?',a:['Mary the mother of Jesus','Mary Magdalene','Martha','Joanna'],c:1,x:'Mary Magdalene was the first person to see Jesus after his resurrection (John 20:14–16).'},
+  {cat:'Prophecy',q:'Which Old Testament prophet foretold the virgin birth of Jesus?',a:['Jeremiah','Micah','Isaiah','Ezekiel'],c:2,x:'Isaiah prophesied a virgin would conceive and bear a son called Immanuel (Isaiah 7:14).'},
+  {cat:'Prophecy',q:'Which city did Micah prophesy as the birthplace of the Messiah?',a:['Jerusalem','Nazareth','Bethlehem','Hebron'],c:2,x:'Micah 5:2 foretold that the ruler of Israel would come from Bethlehem.'},
+  {cat:'Wisdom',q:'What book of the Bible says "there is a time for every purpose under heaven"?',a:['Proverbs','Job','Ecclesiastes','Psalms'],c:2,x:'Ecclesiastes 3:1 begins the famous passage about seasons and times for all things.'},
+  {cat:'Wisdom',q:'Who wrote the book of Proverbs?',a:['David','Moses','Solomon','Ezra'],c:2,x:'Most of Proverbs is attributed to King Solomon (Proverbs 1:1), who was given wisdom by God (1 Kings 4:32).'},
+  {cat:'Miracles',q:'How many loaves of bread did Jesus use to feed the 5,000?',a:['2','3','5','7'],c:2,x:'Jesus used 5 loaves and 2 fish to feed 5,000 men, with 12 baskets left over (John 6:9–13).'},
+];
+
+let qIdx=0, qScore=0, qAnswered=false, qOrder=[];
+
+function shuffle(arr){return arr.slice().sort(()=>Math.random()-.5);}
+
+function startQuiz(){
+  qIdx=0; qScore=0; qAnswered=false;
+  qOrder=shuffle([...Array(QUIZ_Qs.length).keys()]).slice(0,15);
+  document.getElementById('quiz-result').classList.remove('visible');
+  document.getElementById('quiz-main').style.display='';
+  renderQuiz();
+}
+
+function renderQuiz(){
+  const q=QUIZ_Qs[qOrder[qIdx]];
+  document.getElementById('q-score').textContent=qScore;
+  document.getElementById('q-num').innerHTML=`${qIdx+1}<small style="font-size:.9rem;color:rgba(255,255,255,.2)">/15</small>`;
+  document.getElementById('q-progress').style.width=(qIdx/15*100)+'%';
+  document.getElementById('q-tag').textContent=q.cat;
+  document.getElementById('q-text').textContent=q.q;
+  const fb=document.getElementById('q-feedback');
+  fb.textContent=''; fb.className='feedback';
+  document.getElementById('q-next').classList.remove('visible');
+  qAnswered=false;
+  const aWrap=document.getElementById('q-answers');
+  aWrap.innerHTML='';
+  const opts=shuffle(q.a.map((t,i)=>({t,i})));
+  opts.forEach(({t,i})=>{
+    const b=document.createElement('button');
+    b.className='ans-btn'; b.textContent=t;
+    b.onclick=()=>answerQuiz(i===q.c, b, q);
+    aWrap.appendChild(b);
+  });
+}
+
+function answerQuiz(correct, btn, q){
+  if(qAnswered) return;
+  qAnswered=true;
+  const allBtns=document.querySelectorAll('#q-answers .ans-btn');
+  allBtns.forEach(b=>{
+    b.disabled=true;
+    if(b.textContent===q.a[q.c]) b.classList.add('correct');
+  });
+  const fb=document.getElementById('q-feedback');
+  if(correct){
+    btn.classList.add('correct');
+    qScore++;
+    document.getElementById('q-score').textContent=qScore;
+    fb.textContent='✓ Correct! '+q.x;
+    fb.className='feedback show-correct';
+  } else {
+    btn.classList.add('wrong');
+    fb.textContent='✗ '+q.x;
+    fb.className='feedback show-wrong';
+  }
+  document.getElementById('q-next').classList.add('visible');
+}
+
+function quizNext(){
+  qIdx++;
+  if(qIdx>=15){
+    showQuizResult(); return;
+  }
+  renderQuiz();
+}
+
+function showQuizResult(){
+  document.getElementById('quiz-main').style.display='none';
+  const r=document.getElementById('quiz-result');
+  r.classList.add('visible');
+  document.getElementById('quiz-result-score').innerHTML=`${qScore}<span>/15</span>`;
+  const pct=qScore/15;
+  let emoji='&#127775;', sub='';
+  if(pct===1){emoji='&#127881;';sub='Perfect score! You know your Bible!';}
+  else if(pct>=.8){emoji='&#10024;';sub='Excellent! Great Bible knowledge!';}
+  else if(pct>=.6){emoji='&#128077;';sub='Good work — keep reading and studying!';}
+  else if(pct>=.4){emoji='&#128214;';sub='Not bad — open up that Bible and keep going!';}
+  else{emoji='&#128591;';sub='Keep studying — every question is a chance to learn!';}
+  document.getElementById('quiz-emoji').innerHTML=emoji;
+  document.getElementById('quiz-result-sub').textContent=sub;
+}
+
+// ══════════════════════════════
+//  TRIVIA DATA
+// ══════════════════════════════
+const TRIVIA = {
+  easy:[
+    {cat:'People',q:'Who built the ark?',a:['Moses','Noah','Abraham','David'],c:1,x:'Noah built the ark at God\'s command (Genesis 6).'},
+    {cat:'Places',q:'In what garden did Adam and Eve live?',a:['Gethsemane','Galilee','Eden','Canaan'],c:2,x:'Adam and Eve lived in the Garden of Eden (Genesis 2:8).'},
+    {cat:'Events',q:'How many days did it rain during Noah\'s flood?',a:['20','30','40','50'],c:2,x:'It rained for 40 days and 40 nights (Genesis 7:12).'},
+    {cat:'People',q:'Who was the mother of Jesus?',a:['Martha','Mary Magdalene','Mary','Elizabeth'],c:2,x:'Mary was the mother of Jesus (Luke 1:27–31).'},
+    {cat:'Numbers',q:'How many commandments did God give Moses?',a:['5','7','10','12'],c:2,x:'God gave Moses the Ten Commandments (Exodus 20).'},
+    {cat:'People',q:'Who killed the giant Goliath?',a:['Saul','Solomon','Samson','David'],c:3,x:'David killed Goliath with a sling and a stone (1 Samuel 17).'},
+    {cat:'Events',q:'What parted so the Israelites could cross on dry ground?',a:['Jordan River','Dead Sea','Red Sea','Nile River'],c:2,x:'God parted the Red Sea for Moses and the Israelites (Exodus 14:21).'},
+    {cat:'People',q:'Who was cast into the den of lions?',a:['Elijah','Ezekiel','Daniel','Isaiah'],c:2,x:'Daniel was thrown into the lion\'s den (Daniel 6:16).'},
+    {cat:'NT',q:'What city was Jesus raised in?',a:['Bethlehem','Jerusalem','Nazareth','Capernaum'],c:2,x:'Jesus grew up in Nazareth (Luke 2:51).'},
+    {cat:'NT',q:'Who was the father of John the Baptist?',a:['Joseph','Zacharias','Simeon','Eli'],c:1,x:'Zacharias was the father of John the Baptist (Luke 1:13).'},
+    {cat:'OT',q:'Who was sold into slavery by his brothers?',a:['Benjamin','Joseph','Jacob','Isaac'],c:1,x:'Joseph was sold into slavery by his jealous brothers (Genesis 37:28).'},
+    {cat:'NT',q:'What was Matthew\'s job before following Jesus?',a:['Fisherman','Tax collector','Carpenter','Shepherd'],c:1,x:'Matthew was a tax collector (Matthew 9:9).'},
+    // NEW EASY
+    {cat:'OT',q:'What animal spoke to Balaam?',a:['A raven','A donkey','A serpent','A dove'],c:1,x:'God opened the mouth of Balaam\'s donkey to speak to him (Numbers 22:28).'},
+    {cat:'NT',q:'What was Jesus\' first miracle?',a:['Healing a blind man','Walking on water','Turning water to wine','Feeding 5,000'],c:2,x:'Jesus\' first miracle was turning water into wine at a wedding in Cana (John 2:1–11).'},
+    {cat:'OT',q:'What instrument did David play?',a:['Flute','Trumpet','Harp','Lyre'],c:3,x:'David played the lyre (harp) and was known as "the sweet psalmist of Israel" (1 Samuel 16:23).'},
+    {cat:'NT',q:'Where did Jesus grow up?',a:['Bethlehem','Jerusalem','Nazareth','Capernaum'],c:2,x:'Jesus grew up in Nazareth, which is why he was called "Jesus of Nazareth" (Luke 2:51).'},
+    {cat:'OT',q:'How many days was Jonah inside the great fish?',a:['1','2','3','7'],c:2,x:'Jonah was inside the fish for three days and three nights (Jonah 1:17).'},
+    {cat:'People',q:'Who was Moses\' sister?',a:['Leah','Deborah','Miriam','Hannah'],c:2,x:'Miriam was the sister of Moses and Aaron, and a prophetess of Israel (Exodus 15:20).'},
+    {cat:'NT',q:'What did the angel tell the shepherds Jesus would be?',a:['A prophet','A king','A savior','A priest'],c:2,x:'The angel announced: "Today in the city of David there has been born for you a Savior" (Luke 2:11).'},
+    {cat:'NT',q:'Who carried Jesus\' cross to Golgotha?',a:['John','Judas','Simon of Cyrene','Barabbas'],c:2,x:'Simon of Cyrene was compelled to carry Jesus\' cross (Matthew 27:32).'},
+    {cat:'OT',q:'Who was Abraham\'s son of the promise?',a:['Ishmael','Isaac','Jacob','Esau'],c:1,x:'Isaac was the son God promised to Abraham and Sarah in their old age (Genesis 21:1–3).'},
+    {cat:'NT',q:'What was Saul\'s name changed to?',a:['Peter','Barnabas','Paul','Stephen'],c:2,x:'Saul of Tarsus was also called Paul (Acts 13:9), and he became the great apostle to the Gentiles.'},
+    {cat:'OT',q:'Which tribe of Israel did King David belong to?',a:['Levi','Benjamin','Judah','Ephraim'],c:2,x:'David was from the tribe of Judah (Ruth 4:18–22; 1 Samuel 17:12).'},
+    {cat:'NT',q:'What did Jesus say to the storm to calm it?',a:['Go away','Be still','Fear not','Enough'],c:1,x:'Jesus rebuked the wind and said "Peace, be still!" and the storm immediately calmed (Mark 4:39).'},
+  ],
+  medium:[
+    {cat:'OT',q:'What judge of Israel had supernatural strength from his hair?',a:['Gideon','Jephthah','Samson','Deborah'],c:2,x:'Samson\'s strength came from his uncut hair, given as a Nazirite vow (Judges 13–16).'},
+    {cat:'OT',q:'Which book of the Bible contains the Ten Commandments?',a:['Leviticus','Numbers','Deuteronomy','Exodus'],c:3,x:'The Ten Commandments are found in Exodus 20, and again in Deuteronomy 5.'},
+    {cat:'NT',q:'What was the name of the Garden where Jesus prayed before his arrest?',a:['Eden','Gethsemane','Olivet','Carmel'],c:1,x:'Jesus prayed in the Garden of Gethsemane before his arrest (Matthew 26:36).'},
+    {cat:'People',q:'Who was the first martyr of the early church?',a:['James','Philip','Stephen','Barnabas'],c:2,x:'Stephen was stoned to death, becoming the first Christian martyr (Acts 7:59–60).'},
+    {cat:'NT',q:'How many fish did Jesus use to feed 5,000 people?',a:['1','2','3','5'],c:1,x:'Jesus used 5 loaves and 2 fish to feed 5,000 people (John 6:9).'},
+    {cat:'OT',q:'Who was the oldest person recorded in the Bible?',a:['Noah','Enoch','Adam','Methuselah'],c:3,x:'Methuselah lived 969 years (Genesis 5:27).'},
+    {cat:'NT',q:'What was the name of the tax collector who climbed a tree to see Jesus?',a:['Matthew','Levi','Zacchaeus','Simon'],c:2,x:'Zacchaeus climbed a sycamore tree to see Jesus (Luke 19:1–4).'},
+    {cat:'OT',q:'How many wives did Solomon have?',a:['300','500','700','1000'],c:2,x:'Solomon had 700 wives and 300 concubines (1 Kings 11:3).'},
+    {cat:'NT',q:'What did Judas receive for betraying Jesus?',a:['20 silver','30 silver','50 gold','A pardon'],c:1,x:'Judas betrayed Jesus for 30 pieces of silver (Matthew 26:15).'},
+    {cat:'NT',q:'On what mountain did Jesus give the Sermon on the Mount?',a:['Mount Sinai','Mount Carmel','Mount of Olives','An unnamed hill'],c:3,x:'Matthew 5:1 simply says Jesus went up on a mountain — tradition calls it the Mount of Beatitudes.'},
+    {cat:'OT',q:'Who interpreted Pharaoh\'s dream about 7 fat and 7 thin cows?',a:['Moses','Daniel','Joseph','Elijah'],c:2,x:'Joseph interpreted Pharaoh\'s dream, predicting 7 years of plenty and 7 of famine (Genesis 41).'},
+    {cat:'NT',q:'Which disciple walked on water with Jesus?',a:['John','James','Andrew','Peter'],c:3,x:'Peter stepped out of the boat and walked on water toward Jesus (Matthew 14:29).'},
+    // NEW MEDIUM
+    {cat:'OT',q:'Who was Elijah\'s servant and successor?',a:['Gehazi','Elisha','Micaiah','Obadiah'],c:1,x:'Elisha received a double portion of Elijah\'s spirit and succeeded him as prophet (2 Kings 2:9–15).'},
+    {cat:'NT',q:'Which letter of Paul contains the famous "love chapter"?',a:['Romans','Galatians','1 Corinthians','Ephesians'],c:2,x:'1 Corinthians 13 contains the beloved passage on love beginning "Though I speak with tongues of men and angels..."'},
+    {cat:'OT',q:'What sin caused God to scatter people at Babel?',a:['Idolatry','Pride and building a tower to heaven','Witchcraft','Murder'],c:1,x:'The people at Babel built a tower out of pride to reach heaven; God confused their language and scattered them (Genesis 11:1–9).'},
+    {cat:'NT',q:'How many times did Paul ask God to remove his "thorn in the flesh"?',a:['1','2','3','7'],c:2,x:'Paul pleaded with the Lord three times; God replied "My grace is sufficient for you" (2 Corinthians 12:8–9).'},
+    {cat:'OT',q:'Who was the prophet that confronted King David about his sin with Bathsheba?',a:['Elijah','Isaiah','Nathan','Samuel'],c:2,x:'Nathan the prophet told David a parable of a stolen lamb to convict him of his sin (2 Samuel 12:1–7).'},
+    {cat:'Places',q:'In what river was Jesus baptized?',a:['Nile','Euphrates','Jordan','Galilee'],c:2,x:'Jesus was baptized by John in the Jordan River (Matthew 3:13).'},
+    {cat:'NT',q:'What was Lydia\'s trade when Paul met her in Philippi?',a:['Tentmaking','Selling purple cloth','Making pottery','Fishing'],c:1,x:'Lydia was a seller of purple cloth and the first convert in Europe (Acts 16:14).'},
+    {cat:'OT',q:'Which book of the Bible is a conversation between God and Satan about a righteous man?',a:['Proverbs','Psalms','Job','Ecclesiastes'],c:2,x:'The book of Job opens with a heavenly conversation where Satan is permitted to test Job\'s faithfulness.'},
+    {cat:'NT',q:'What appeared over Jesus at his baptism?',a:['A star','A dove','A flame','An angel'],c:1,x:'The Holy Spirit descended on Jesus like a dove, and a voice from heaven said "This is my beloved Son" (Matthew 3:16–17).'},
+    {cat:'People',q:'Who wrote the Psalms along with David?',a:['Solomon only','Moses, Asaph, and others','Elijah and Elisha','The priests of Aaron'],c:1,x:'The Psalms have multiple authors including Moses (Ps. 90), Asaph, the sons of Korah, and Solomon, along with David.'},
+    {cat:'NT',q:'What was the name of the prison guard Paul and Silas converted after an earthquake?',a:['Cornelius','The Philippian jailer','Felix','Crispus'],c:1,x:'An earthquake freed Paul and Silas; the Philippian jailer and his whole household believed and were baptized (Acts 16:25–34).'},
+    {cat:'OT',q:'How many spies did Moses send into the land of Canaan?',a:['7','10','12','40'],c:2,x:'Moses sent 12 spies — one from each tribe — to scout the land of Canaan (Numbers 13:1–2).'},
+  ],
+  hard:[
+    {cat:'OT',q:'Who was the father of Abraham?',a:['Nahor','Terah','Shem','Lot'],c:1,x:'Terah was the father of Abraham (Genesis 11:26).'},
+    {cat:'NT',q:'Which church received the letter with the seven seals in Revelation?',a:['Ephesus','Corinth','Antioch','Rome'],c:0,x:'The letter in Revelation was addressed to seven churches, with Ephesus listed first (Revelation 2:1).'},
+    {cat:'NT',q:'What was the original name of the Apostle Paul?',a:['Simon','Silas','Saul','Barnabas'],c:2,x:'Paul was originally named Saul of Tarsus (Acts 13:9).'},
+    {cat:'OT',q:'Which prophet was taken to heaven in a chariot of fire?',a:['Elisha','Isaiah','Ezekiel','Elijah'],c:3,x:'Elijah was taken up to heaven in a whirlwind by a chariot of fire (2 Kings 2:11).'},
+    {cat:'OT',q:'What was the name of Moses\' father-in-law?',a:['Aaron','Jethro','Hobab','Amram'],c:1,x:'Jethro was the priest of Midian and father-in-law of Moses (Exodus 3:1).'},
+    {cat:'NT',q:'In which city did the Holy Spirit descend on the disciples at Pentecost?',a:['Bethlehem','Antioch','Jerusalem','Nazareth'],c:2,x:'The Holy Spirit descended on the disciples in Jerusalem on the day of Pentecost (Acts 2:1–4).'},
+    {cat:'OT',q:'How many years did the Israelites wander in the wilderness?',a:['20','30','40','50'],c:2,x:'The Israelites wandered in the wilderness for 40 years (Numbers 14:33).'},
+    {cat:'NT',q:'Who wrote the book of Revelation?',a:['Paul','Peter','James','John'],c:3,x:'The Apostle John wrote the book of Revelation while exiled on the island of Patmos (Revelation 1:9).'},
+    {cat:'OT',q:'What was the name of King David\'s best friend?',a:['Abner','Joab','Jonathan','Nathan'],c:2,x:'Jonathan, King Saul\'s son, was David\'s closest friend (1 Samuel 18:1).'},
+    {cat:'NT',q:'How many days was Lazarus in the tomb before Jesus raised him?',a:['1','2','3','4'],c:3,x:'Lazarus had been in the tomb for four days when Jesus raised him (John 11:39).'},
+    {cat:'NT',q:'What was the name of the high priest who questioned Jesus?',a:['Annas','Caiaphas','Pilate','Herod'],c:1,x:'Caiaphas was the high priest during Jesus\' trial (Matthew 26:57).'},
+    {cat:'OT',q:'Which book of the Bible has the most chapters?',a:['Genesis','Isaiah','Jeremiah','Psalms'],c:3,x:'The book of Psalms has 150 chapters — more than any other book in the Bible.'},
+    // NEW HARD
+    {cat:'OT',q:'What are the five books of Moses called collectively?',a:['The Writings','The Prophets','The Pentateuch','The Torah only'],c:2,x:'The first five books (Genesis through Deuteronomy) are called the Pentateuch, from Greek for "five scrolls."'},
+    {cat:'NT',q:'How many people saw the risen Jesus according to Paul in 1 Corinthians 15?',a:['12','120','500','3000'],c:2,x:'Paul records that the risen Jesus appeared to more than 500 brothers at one time (1 Corinthians 15:6).'},
+    {cat:'OT',q:'Which king of Babylon destroyed Solomon\'s temple?',a:['Cyrus','Darius','Nebuchadnezzar','Sennacherib'],c:2,x:'Nebuchadnezzar II destroyed Solomon\'s temple in 586 BC and exiled the people of Judah (2 Kings 25:8–9).'},
+    {cat:'NT',q:'What Greek word did Jesus use meaning "truly" or "verily"?',a:['Shalom','Amen','Maranatha','Hosanna'],c:1,x:'Jesus frequently said "Amen" (truly) before statements, asserting his own authority rather than citing others.'},
+    {cat:'OT',q:'Who is the only woman specifically called a prophetess and a judge in the Old Testament?',a:['Miriam','Huldah','Deborah','Anna'],c:2,x:'Deborah is uniquely called both a prophetess and a judge — she even led Israel\'s army (Judges 4:4–5).'},
+    {cat:'OT',q:'How many chapters are in the book of Isaiah?',a:['39','60','66','72'],c:2,x:'Isaiah has 66 chapters — often called "the Bible in miniature" with 39 OT-like and 27 NT-like chapters.'},
+    {cat:'NT',q:'What was the name of the sorcerer who tried to buy the Holy Spirit from Peter?',a:['Elymas','Simon Magus','Bar-Jesus','Alexander'],c:1,x:'Simon Magus offered money for the ability to give the Holy Spirit; Peter rebuked him sharply (Acts 8:18–23).'},
+    {cat:'OT',q:'What does the Hebrew name "Immanuel" mean?',a:['God saves','God with us','Lord is my shepherd','The Lord is good'],c:1,x:'Immanuel means "God with us," the name Isaiah prophesied for the coming Messiah (Isaiah 7:14; Matthew 1:23).'},
+    {cat:'NT',q:'Which of Paul\'s companions was called "the beloved physician"?',a:['Barnabas','Titus','Luke','Silas'],c:2,x:'Paul calls Luke "the beloved physician" in his letter to the Colossians (Colossians 4:14).'},
+    {cat:'OT',q:'What was the name of the Moabite woman who stayed loyal to Naomi?',a:['Orpah','Tamar','Rahab','Ruth'],c:3,x:'Ruth famously said "Where you go, I will go" to Naomi, and became an ancestor of King David (Ruth 1:16).'},
+    {cat:'NT',q:'Which letter warns against adding to or removing from the words of prophecy?',a:['Jude','2 Peter','1 John','Revelation'],c:3,x:'Revelation 22:18–19 contains a solemn warning not to add to or take away from the words of that prophecy.'},
+    {cat:'OT',q:'In what direction did the Israelites face when praying toward Jerusalem while in exile?',a:['East','West','North','South'],c:1,x:'Daniel opened his windows toward Jerusalem and prayed three times a day facing west toward the holy city (Daniel 6:10).'},
+  ]
+};
+
+let tIdx=0, tScore=0, tAnswered=false, tOrder=[], tDiff='easy';
+
+function setDiff(d, btn){
+  tDiff=d;
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  startTrivia();
+}
+
+function startTrivia(){
+  tIdx=0; tScore=0; tAnswered=false;
+  tOrder=shuffle([...Array(TRIVIA[tDiff].length).keys()]).slice(0,15);
+  document.getElementById('trivia-result').classList.remove('visible');
+  document.getElementById('trivia-main').style.display='';
+  renderTrivia();
+}
+
+function renderTrivia(){
+  const pool=TRIVIA[tDiff];
+  const q=pool[tOrder[tIdx]%pool.length];
+  document.getElementById('t-score').textContent=tScore;
+  document.getElementById('t-num').innerHTML=`${tIdx+1}<small style="font-size:.9rem;color:rgba(255,255,255,.2)">/15</small>`;
+  document.getElementById('t-progress').style.width=(tIdx/15*100)+'%';
+  document.getElementById('t-cat').textContent=q.cat;
+  document.getElementById('t-text').textContent=q.q;
+  const fb=document.getElementById('t-feedback');
+  fb.textContent=''; fb.className='feedback';
+  document.getElementById('t-next').classList.remove('visible');
+  tAnswered=false;
+  const aWrap=document.getElementById('t-answers');
+  aWrap.innerHTML='';
+  const opts=shuffle(q.a.map((t,i)=>({t,i})));
+  opts.forEach(({t,i})=>{
+    const b=document.createElement('button');
+    b.className='ans-btn'; b.textContent=t;
+    b.onclick=()=>answerTrivia(i===q.c, b, q);
+    aWrap.appendChild(b);
+  });
+}
+
+function answerTrivia(correct, btn, q){
+  if(tAnswered) return;
+  tAnswered=true;
+  const allBtns=document.querySelectorAll('#t-answers .ans-btn');
+  allBtns.forEach(b=>{
+    b.disabled=true;
+    if(b.textContent===q.a[q.c]) b.classList.add('correct');
+  });
+  const fb=document.getElementById('t-feedback');
+  if(correct){
+    btn.classList.add('correct');
+    tScore++;
+    document.getElementById('t-score').textContent=tScore;
+    fb.textContent='✓ Correct! '+q.x;
+    fb.className='feedback show-correct';
+  } else {
+    btn.classList.add('wrong');
+    fb.textContent='✗ '+q.x;
+    fb.className='feedback show-wrong';
+  }
+  document.getElementById('t-next').classList.add('visible');
+}
+
+function triviaNext(){
+  tIdx++;
+  if(tIdx>=15){ showTriviaResult(); return; }
+  renderTrivia();
+}
+
+function showTriviaResult(){
+  document.getElementById('trivia-main').style.display='none';
+  const r=document.getElementById('trivia-result');
+  r.classList.add('visible');
+  document.getElementById('trivia-result-score').innerHTML=`${tScore}<span>/15</span>`;
+  const pct=tScore/15;
+  let emoji='&#127775;', sub='';
+  if(pct===1){emoji='&#127881;';sub='Flawless! You\'re a Bible scholar!';}
+  else if(pct>=.8){emoji='&#10024;';sub='Outstanding Bible knowledge!';}
+  else if(pct>=.6){emoji='&#128077;';sub='Solid! Keep reading the Word!';}
+  else if(pct>=.4){emoji='&#128214;';sub='Good effort — the Word is worth studying!';}
+  else{emoji='&#128591;';sub='Every question is a new lesson — keep going!';}
+  document.getElementById('trivia-emoji').innerHTML=emoji;
+  document.getElementById('trivia-result-sub').textContent=sub;
+}
+
+// ══════════════════════════════
+//  FLASHCARDS DATA
+// ══════════════════════════════
+const FLASHCARDS = [
+  // Original 15
+  {ref:'John 3:16',v:'For God so loved the world that He gave His only begotten Son, that whoever believes in Him should not perish but have everlasting life.'},
+  {ref:'Psalm 23:1',v:'The LORD is my shepherd; I shall not want.'},
+  {ref:'Romans 8:28',v:'And we know that all things work together for good to those who love God, to those who are called according to His purpose.'},
+  {ref:'Philippians 4:13',v:'I can do all things through Christ who strengthens me.'},
+  {ref:'Jeremiah 29:11',v:'For I know the plans I have for you, declares the LORD, plans for welfare and not for evil, to give you a future and a hope.'},
+  {ref:'Proverbs 3:5–6',v:'Trust in the LORD with all your heart, and do not lean on your own understanding. In all your ways acknowledge Him, and He will make straight your paths.'},
+  {ref:'Isaiah 40:31',v:'But they who wait for the LORD shall renew their strength; they shall mount up with wings like eagles; they shall run and not be weary; they shall walk and not faint.'},
+  {ref:'Matthew 6:33',v:'But seek first the kingdom of God and His righteousness, and all these things will be added to you.'},
+  {ref:'Psalm 46:1',v:'God is our refuge and strength, a very present help in trouble.'},
+  {ref:'Romans 10:9',v:'If you confess with your mouth that Jesus is Lord and believe in your heart that God raised Him from the dead, you will be saved.'},
+  {ref:'Ephesians 2:8–9',v:'For by grace you have been saved through faith. And this is not your own doing; it is the gift of God, not a result of works, so that no one may boast.'},
+  {ref:'2 Timothy 3:16',v:'All Scripture is breathed out by God and profitable for teaching, for reproof, for correction, and for training in righteousness.'},
+  {ref:'Hebrews 11:1',v:'Now faith is the substance of things hoped for, the evidence of things not seen.'},
+  {ref:'Romans 3:23',v:'For all have sinned and fall short of the glory of God.'},
+  {ref:'Psalm 119:105',v:'Your word is a lamp to my feet and a light to my path.'},
+  // New 35
+  {ref:'John 14:6',v:'Jesus said to him, "I am the way, and the truth, and the life. No one comes to the Father except through me."'},
+  {ref:'Matthew 5:16',v:'Let your light shine before others, so that they may see your good works and give glory to your Father who is in heaven.'},
+  {ref:'Isaiah 41:10',v:'Fear not, for I am with you; be not dismayed, for I am your God; I will strengthen you, I will help you, I will uphold you with my righteous right hand.'},
+  {ref:'Psalm 27:1',v:'The LORD is my light and my salvation; whom shall I fear? The LORD is the stronghold of my life; of whom shall I be afraid?'},
+  {ref:'Romans 6:23',v:'For the wages of sin is death, but the free gift of God is eternal life in Christ Jesus our Lord.'},
+  {ref:'Matthew 28:19–20',v:'Go therefore and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, teaching them to observe all that I have commanded you.'},
+  {ref:'Galatians 2:20',v:'I have been crucified with Christ. It is no longer I who live, but Christ who lives in me. And the life I now live in the flesh I live by faith in the Son of God, who loved me and gave himself for me.'},
+  {ref:'Lamentations 3:22–23',v:'The steadfast love of the LORD never ceases; his mercies never come to an end; they are new every morning; great is your faithfulness.'},
+  {ref:'1 Corinthians 13:4–5',v:'Love is patient and kind; love does not envy or boast; it is not arrogant or rude. It does not insist on its own way; it is not irritable or resentful.'},
+  {ref:'Psalm 91:1',v:'He who dwells in the shelter of the Most High will abide in the shadow of the Almighty.'},
+  {ref:'Joshua 1:9',v:'Have I not commanded you? Be strong and courageous. Do not be frightened, and do not be dismayed, for the LORD your God is with you wherever you go.'},
+  {ref:'2 Corinthians 5:17',v:'Therefore, if anyone is in Christ, he is a new creation. The old has passed away; behold, the new has come.'},
+  {ref:'Psalm 37:4',v:'Delight yourself in the LORD, and he will give you the desires of your heart.'},
+  {ref:'John 10:10',v:'The thief comes only to steal and kill and destroy. I came that they may have life and have it abundantly.'},
+  {ref:'Romans 12:2',v:'Do not be conformed to this world, but be transformed by the renewal of your mind, that by testing you may discern what is the will of God, what is good and acceptable and perfect.'},
+  {ref:'Ephesians 6:11',v:'Put on the whole armor of God, that you may be able to stand against the schemes of the devil.'},
+  {ref:'Psalm 23:4',v:'Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me; your rod and your staff, they comfort me.'},
+  {ref:'1 John 4:8',v:'Anyone who does not love does not know God, because God is love.'},
+  {ref:'Proverbs 22:6',v:'Train up a child in the way he should go; even when he is old he will not depart from it.'},
+  {ref:'Matthew 11:28',v:'Come to me, all who labor and are heavy laden, and I will give you rest.'},
+  {ref:'Philippians 4:6–7',v:'Do not be anxious about anything, but in everything by prayer and supplication with thanksgiving let your requests be made known to God. And the peace of God, which surpasses all understanding, will guard your hearts and your minds in Christ Jesus.'},
+  {ref:'Isaiah 53:5',v:'But he was pierced for our transgressions; he was crushed for our iniquities; upon him was the chastisement that brought us peace, and with his wounds we are healed.'},
+  {ref:'Micah 6:8',v:'He has told you, O man, what is good; and what does the LORD require of you but to do justice, and to love kindness, and to walk humbly with your God?'},
+  {ref:'John 15:13',v:'Greater love has no one than this, that someone lay down his life for his friends.'},
+  {ref:'Genesis 1:1',v:'In the beginning, God created the heavens and the earth.'},
+  {ref:'Psalm 139:14',v:'I praise you, for I am fearfully and wonderfully made. Wonderful are your works; my soul knows it very well.'},
+  {ref:'Romans 8:38–39',v:'For I am sure that neither death nor life, nor angels nor rulers, nor things present nor things to come, nor powers, nor height nor depth, nor anything else in all creation, will be able to separate us from the love of God in Christ Jesus our Lord.'},
+  {ref:'Acts 1:8',v:'But you will receive power when the Holy Spirit has come upon you, and you will be my witnesses in Jerusalem and in all Judea and Samaria, and to the end of the earth.'},
+  {ref:'2 Chronicles 7:14',v:'If my people who are called by my name humble themselves, and pray and seek my face and turn from their wicked ways, then I will hear from heaven and will forgive their sin and heal their land.'},
+  {ref:'Proverbs 18:10',v:'The name of the LORD is a strong tower; the righteous man runs into it and is safe.'},
+  {ref:'Colossians 3:23',v:'Whatever you do, work heartily, as for the Lord and not for men.'},
+  {ref:'Psalm 34:8',v:'Oh, taste and see that the LORD is good! Blessed is the man who takes refuge in him!'},
+  {ref:'Matthew 22:37–38',v:'And he said to him, "You shall love the Lord your God with all your heart and with all your soul and with all your mind. This is the great and first commandment."'},
+  {ref:'Hebrews 4:12',v:'For the word of God is living and active, sharper than any two-edged sword, piercing to the division of soul and of spirit, of joints and of marrow, and discerning the thoughts and intentions of the heart.'},
+];
+
+let fcCards=[], fcCurrent=0, fcKnown=new Set(), fcFlipped=false;
+
+function initFlash(){
+  fcCards=shuffle([...FLASHCARDS]);
+  fcCurrent=0; fcKnown=new Set(); fcFlipped=false;
+  renderFlash();
+}
+
+function renderFlash(){
+  const c=fcCards[fcCurrent];
+  document.getElementById('fc-ref').textContent=c.ref;
+  document.getElementById('fc-verse').textContent=c.v;
+  document.getElementById('fc-counter').textContent=`${fcCurrent+1} / ${fcCards.length}`;
+  const card=document.getElementById('fc-card');
+  card.classList.remove('flipped'); fcFlipped=false;
+  // dots
+  const dots=document.getElementById('fc-dots');
+  dots.innerHTML='';
+  fcCards.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='fc-dot'+(fcKnown.has(i)?' known':i===fcCurrent?' current':'');
+    dots.appendChild(d);
+  });
+}
+
+function flipCard(){
+  fcFlipped=!fcFlipped;
+  document.getElementById('fc-card').classList.toggle('flipped',fcFlipped);
+}
+
+function fcNext(){
+  if(fcCurrent<fcCards.length-1){fcCurrent++; renderFlash();}
+}
+function fcPrev(){
+  if(fcCurrent>0){fcCurrent--; renderFlash();}
+}
+function markKnown(){
+  fcKnown.add(fcCurrent);
+  fcNext();
+}
+function shuffleCards(){
+  fcCards=shuffle([...FLASHCARDS]); fcCurrent=0; fcKnown=new Set();
+  renderFlash();
+}
+
+// ── INIT ──
+startQuiz();
+startTrivia();
+initFlash();
+
+// Auto-switch tab from URL param e.g. study.html?tab=trivia
+(function(){
+  const tab = new URLSearchParams(window.location.search).get('tab');
+  if(tab === 'trivia' || tab === 'flash') {
+    const idx = tab === 'trivia' ? 1 : 2;
+    document.querySelectorAll('.game-tab')[idx].click();
+  }
+})();
+</script>
+</body>
+</html>

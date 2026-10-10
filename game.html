@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+<title>Scripture Blaster — HolyBibleBook</title>
+<meta name="description" content="Scripture Blaster — a Bible shooter game. Blast the correct answer!"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --black:#04030a;--gold:#c9973a;--gl:#e8b84b;--cream:#faf6ee;
+  --green:#3dc97a;--red:#e05050;--blue:#4a8fe8;
+}
+html,body{
+  width:100%;height:100%;background:var(--black);
+  color:var(--cream);font-family:'Courier New',monospace;
+  overflow:hidden;touch-action:none;user-select:none;
+}
+canvas{display:block;position:fixed;top:0;left:0;}
+
+/* HUD */
+#hud{
+  position:fixed;top:0;left:0;right:0;height:48px;
+  background:rgba(4,3,10,.92);border-bottom:1px solid rgba(201,151,58,.25);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;z-index:10;pointer-events:none;
+}
+.hud-item{text-align:center;}
+.hud-label{font-size:.42rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(201,151,58,.45);}
+.hud-val{font-size:1rem;color:var(--gold);font-weight:bold;margin-top:1px;}
+#livesRow{font-size:1rem;letter-spacing:3px;color:var(--red);}
+#waveVal{color:var(--gl);}
+
+/* QUESTION BAR */
+#qbar{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  background:rgba(4,3,10,.95);border:1px solid rgba(201,151,58,.4);
+  border-radius:2px;padding:8px 14px;text-align:center;max-width:calc(100vw - 20px);
+  max-width:92vw;min-width:280px;z-index:10;pointer-events:none;
+}
+#qtext{font-size:.78rem;color:var(--cream);line-height:1.4;}
+@media(max-width:420px){#qtext{font-size:.68rem;line-height:1.35;}#qref{font-size:.44rem;}}
+#qref{font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(201,151,58,.5);margin-top:4px;}
+
+/* MOBILE CONTROLS */
+#mctrl{
+  position:fixed;bottom:0;left:0;right:0;height:72px;
+  display:none;align-items:center;justify-content:space-between;
+  padding:0 16px;background:rgba(4,3,10,.95);
+  border-top:1px solid rgba(201,151,58,.15);z-index:10;gap:8px;
+}
+.mc{
+  background:rgba(201,151,58,.12);border:1px solid rgba(201,151,58,.3);
+  color:var(--gold);font-size:1.3rem;padding:8px 20px;
+  border-radius:3px;cursor:pointer;flex:1;text-align:center;
+  -webkit-tap-highlight-color:transparent;
+}
+#mcfire{
+  background:rgba(201,151,58,.22);border-color:var(--gold);
+  font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;flex:1.2;
+}
+
+/* HOME / GAMEOVER OVERLAY */
+.overlay{
+  position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:20;
+  background:rgba(4,3,10,.96);text-align:center;padding:20px;
+}
+.ov-title{
+  font-family:Georgia,serif;font-size:clamp(2rem,6vw,3.2rem);
+  font-style:italic;color:var(--gl);margin-bottom:4px;
+}
+.ov-sub{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(201,151,58,.5);margin-bottom:28px;}
+.ov-verse{
+  font-family:Georgia,serif;font-style:italic;
+  font-size:.88rem;color:rgba(250,246,238,.4);max-width:380px;
+  line-height:1.75;margin-bottom:28px;
+}
+.ov-verse cite{
+  display:block;font-style:normal;font-family:'Courier New',monospace;
+  font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(201,151,58,.4);margin-top:6px;
+}
+.diff-row{display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;margin-bottom:20px;}
+.diff-btn{
+  background:rgba(201,151,58,.07);border:1px solid rgba(201,151,58,.25);
+  color:var(--cream);font-family:'Courier New',monospace;
+  font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;
+  padding:13px 20px;cursor:pointer;transition:all .18s;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.diff-btn:hover,.diff-btn:focus{background:rgba(201,151,58,.15);border-color:var(--gold);outline:none;}
+.diff-right{font-size:.5rem;color:rgba(201,151,58,.5);}
+.how-btn{
+  font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;
+  color:rgba(255,255,255,.25);background:none;border:1px solid rgba(255,255,255,.1);
+  padding:8px 20px;cursor:pointer;transition:all .2s;
+}
+.how-btn:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.4);}
+.high-line{font-size:.55rem;letter-spacing:.1em;color:rgba(255,255,255,.2);margin-top:14px;}
+.gold{color:var(--gold);}
+
+.ov-stats{display:flex;gap:2px;width:100%;max-width:320px;margin-bottom:20px;}
+.ov-stat{flex:1;background:rgba(201,151,58,.06);border:1px solid rgba(201,151,58,.12);padding:14px 10px;text-align:center;}
+.ov-stat-n{font-family:Georgia,serif;font-size:1.5rem;color:var(--gold);}
+.ov-stat-l{font-size:.46rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-top:3px;}
+.ov-result-verse{font-family:Georgia,serif;font-style:italic;font-size:.85rem;color:rgba(250,246,238,.35);max-width:340px;line-height:1.7;margin-bottom:24px;}
+.ov-result-verse cite{display:block;font-style:normal;font-family:'Courier New',monospace;font-size:.48rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(201,151,58,.35);margin-top:5px;}
+
+.play-btn{
+  background:var(--gold);color:var(--black);border:none;
+  font-family:'Courier New',monospace;font-size:.65rem;
+  letter-spacing:.2em;text-transform:uppercase;padding:14px 36px;
+  cursor:pointer;transition:background .2s;margin:4px;
+}
+.play-btn:hover{background:var(--gl);}
+.back-btn{
+  background:none;border:1px solid rgba(201,151,58,.3);
+  color:rgba(201,151,58,.7);font-family:'Courier New',monospace;
+  font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;
+  padding:12px 28px;cursor:pointer;transition:all .2s;margin:4px;
+}
+.back-btn:hover{border-color:var(--gold);color:var(--gold);}
+.nav-link{
+  position:fixed;top:12px;left:12px;z-index:30;
+  font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.3);text-decoration:none;
+  border:1px solid rgba(255,255,255,.1);padding:5px 12px;transition:all .2s;
+}
+.nav-link:hover{border-color:var(--gold);color:var(--gold);}
+
+#pauseOverlay{
+  position:fixed;inset:0;background:rgba(4,3,10,.8);
+  display:none;align-items:center;justify-content:center;
+  flex-direction:column;z-index:20;gap:12px;
+}
+#pauseOverlay.show{display:flex;}
+#pauseOverlay h2{font-family:Georgia,serif;font-style:italic;font-size:2rem;color:var(--gl);}
+</style>
+</head>
+<body>
+
+<a class="nav-link" href="index.html">&#8592; Bible</a>
+<canvas id="c"></canvas>
+
+<!-- HUD -->
+<div id="hud" style="display:none;">
+  <div class="hud-item"><div class="hud-label">Score</div><div class="hud-val" id="scoreVal">0</div></div>
+  <div class="hud-item"><div class="hud-label">Wave</div><div class="hud-val" id="waveVal">1</div></div>
+  <div class="hud-item"><div class="hud-label">Lives</div><div class="hud-val" id="livesRow">♥♥♥</div></div>
+  <div class="hud-item"><div class="hud-label">Combo</div><div class="hud-val" id="comboVal">x1</div></div>
+</div>
+
+<!-- QUESTION BAR -->
+<div id="qbar" style="display:none;">
+  <div id="qtext">Loading...</div>
+  <div id="qref"></div>
+</div>
+
+<!-- MOBILE CONTROLS -->
+<div id="mctrl">
+  <div class="mc" id="mcleft">◀</div>
+  <div class="mc" id="mcfire">🔥 FIRE</div>
+  <div class="mc" id="mcright">▶</div>
+</div>
+
+<!-- PAUSE OVERLAY -->
+<div id="pauseOverlay">
+  <h2>Paused</h2>
+  <button class="play-btn" onclick="togglePause()">▶ Resume</button>
+  <button class="back-btn" onclick="goHome()">← Menu</button>
+</div>
+
+<!-- HOME SCREEN -->
+<div class="overlay" id="homeScreen">
+  <div class="ov-title">Scripture<br>Blaster</div>
+  <div class="ov-sub">&#9670; Bible Shooter Game &#9670;</div>
+  <div class="ov-verse">
+    &ldquo;Put on the whole armour of God, that ye may be able to stand against the wiles of the devil.&rdquo;
+    <cite>Ephesians 6:11</cite>
+  </div>
+  <div class="diff-row">
+    <button class="diff-btn" onclick="startGame(1)">
+      <span>&#9312; Beginner</span>
+      <span class="diff-right">Slow · 3 lives</span>
+    </button>
+    <button class="diff-btn" onclick="startGame(2)">
+      <span>&#9313; Warrior</span>
+      <span class="diff-right">Medium · 3 lives</span>
+    </button>
+    <button class="diff-btn" onclick="startGame(3)">
+      <span>&#9314; Champion</span>
+      <span class="diff-right">Fast · 3 lives · More enemies</span>
+    </button>
+  </div>
+  <button class="how-btn" onclick="showHow()">How to Play</button>
+  <div class="high-line">Best: <span class="gold" id="homeHigh">0</span></div>
+</div>
+
+<!-- HOW TO PLAY -->
+<div class="overlay" id="howScreen" style="display:none;">
+  <div class="ov-title" style="font-size:1.8rem;">How to Play</div>
+  <div style="max-width:380px;text-align:left;margin:20px 0;font-size:.75rem;line-height:2.1;color:rgba(250,246,238,.65);">
+    <div>🎯 A Bible question appears at the bottom</div>
+    <div>💥 Answer words fall from the sky</div>
+    <div>✅ Shoot the <span style="color:var(--gl)">CORRECT answer</span> to earn points</div>
+    <div>❌ Shooting wrong answers costs a life!</div>
+    <div>⚡ Chain correct shots for a <span style="color:var(--gold)">combo multiplier</span></div>
+    <div>🎮 Move: <span style="color:var(--gold)">Arrow keys or A/D</span></div>
+    <div>🔥 Shoot: <span style="color:var(--gold)">Spacebar</span> (mobile: buttons)</div>
+    <div>⏸ Pause: <span style="color:var(--gold)">P or Escape</span></div>
+    <div>📖 Each wave adds more decoys — stay sharp!</div>
+  </div>
+  <button class="play-btn" onclick="hideHow()">Got It!</button>
+</div>
+
+<!-- GAME OVER SCREEN -->
+<div class="overlay" id="gameOverScreen" style="display:none;">
+  <div class="ov-title" id="goTitle">Game Over</div>
+  <div class="ov-sub" id="goBadge">Keep studying the Word</div>
+  <div class="ov-stats">
+    <div class="ov-stat"><div class="ov-stat-n" id="goScore">0</div><div class="ov-stat-l">Score</div></div>
+    <div class="ov-stat"><div class="ov-stat-n" id="goWave">1</div><div class="ov-stat-l">Wave</div></div>
+    <div class="ov-stat"><div class="ov-stat-n" id="goCombo">x1</div><div class="ov-stat-l">Best Combo</div></div>
+  </div>
+  <div class="ov-result-verse" id="goVerse"></div>
+  <div style="display:flex;flex-wrap:wrap;justify-content:center;">
+    <button class="play-btn" id="goPlayAgain">▶ Play Again</button>
+    <button class="back-btn" onclick="goHome()">← Menu</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  QUESTIONS
+// ═══════════════════════════════════════════════════════
+const QS = [
+  {q:"Who built the ark?",a:"Noah",w:["Moses","David","Abraham","Solomon","Elijah","Joshua"],ref:"Genesis 6:14"},
+  {q:"In what city was Jesus born?",a:"Bethlehem",w:["Nazareth","Jerusalem","Jericho","Capernaum","Hebron","Galilee"],ref:"Luke 2:4"},
+  {q:"Who was swallowed by a great fish?",a:"Jonah",w:["Elijah","Isaiah","Daniel","Hosea","Amos","Micah"],ref:"Jonah 1:17"},
+  {q:"How many disciples did Jesus choose?",a:"Twelve",w:["Seven","Ten","Fifteen","Twenty","Eight","Nine"],ref:"Mark 3:14"},
+  {q:"What did Jesus turn water into?",a:"Wine",w:["Milk","Honey","Oil","Blood","Bread","Juice"],ref:"John 2:9"},
+  {q:"Who killed Goliath?",a:"David",w:["Saul","Jonathan","Samson","Gideon","Joshua","Eli"],ref:"1 Samuel 17:50"},
+  {q:"Who denied Jesus three times?",a:"Peter",w:["Judas","John","Thomas","James","Andrew","Philip"],ref:"Luke 22:61"},
+  {q:"What is the last book of the Bible?",a:"Revelation",w:["Malachi","Acts","Jude","Daniel","Isaiah","Numbers"],ref:"Revelation 1:1"},
+  {q:"Who was the first man?",a:"Adam",w:["Noah","Cain","Abel","Seth","Enoch","Enos"],ref:"Genesis 2:7"},
+  {q:"Who baptized Jesus?",a:"John",w:["Peter","Andrew","Philip","Moses","Elijah","James"],ref:"Matthew 3:13"},
+  {q:"What gave Samson his strength?",a:"Hair",w:["Faith","Prayer","God","Sword","Belt","Ring"],ref:"Judges 16:17"},
+  {q:"Who interpreted Pharaoh's dreams?",a:"Joseph",w:["Moses","Daniel","Solomon","Elijah","Samuel","Aaron"],ref:"Genesis 41:15"},
+  {q:"Who was the first king of Israel?",a:"Saul",w:["David","Solomon","Samuel","Gideon","Eli","Jesse"],ref:"1 Samuel 10:1"},
+  {q:"Which disciple doubted the resurrection?",a:"Thomas",w:["Peter","James","Philip","Nathanael","Matthew","Simon"],ref:"John 20:25"},
+  {q:"Who was the wisest king?",a:"Solomon",w:["David","Moses","Abraham","Elijah","Daniel","Hezekiah"],ref:"1 Kings 4:31"},
+  {q:"How many days was Lazarus dead?",a:"Four",w:["Three","Two","Seven","One","Five","Six"],ref:"John 11:39"},
+  {q:"Who was Moses' brother?",a:"Aaron",w:["Joshua","Caleb","Nadab","Eleazar","Miriam","Hur"],ref:"Exodus 4:14"},
+  {q:"What tree did Zacchaeus climb?",a:"Sycamore",w:["Fig","Olive","Cedar","Oak","Palm","Pine"],ref:"Luke 19:4"},
+  {q:"How many days did it rain in the flood?",a:"Forty",w:["Seven","Fourteen","Twenty","Thirty","Sixty","Fifty"],ref:"Genesis 7:12"},
+  {q:"On what mountain did Moses get the Law?",a:"Sinai",w:["Horeb","Nebo","Carmel","Moriah","Zion","Pisgah"],ref:"Exodus 19:11"},
+  {q:"Who replaced Judas as apostle?",a:"Matthias",w:["Paul","Barnabas","Stephen","Philip","Silas","Mark"],ref:"Acts 1:26"},
+  {q:"What was Paul's name before conversion?",a:"Saul",w:["Simon","Barnabas","Silas","Titus","Luke","Ananias"],ref:"Acts 13:9"},
+  {q:"Which prophet was taken to heaven in fire?",a:"Elijah",w:["Elisha","Isaiah","Enoch","Moses","Ezekiel","Daniel"],ref:"2 Kings 2:11"},
+  {q:"Who was the father of John the Baptist?",a:"Zechariah",w:["Joseph","Simeon","Eli","Ananias","Joachim","Cleopas"],ref:"Luke 1:13"},
+  {q:"Who wrote most of the Psalms?",a:"David",w:["Solomon","Moses","Asaph","Korah","Ethan","Jeduthun"],ref:"Psalm 72:20"},
+  {q:"How many books are in the whole Bible?",a:"Sixty-six",w:["Thirty-nine","Twenty-seven","Forty","Seventy","Fifty","Eighty"],ref:""},
+  {q:"In what garden was Jesus arrested?",a:"Gethsemane",w:["Eden","Olive","Kidron","Bethany","Calvary","Moriah"],ref:"Matthew 26:36"},
+  {q:"Who was Abraham's wife?",a:"Sarah",w:["Rebekah","Rachel","Leah","Ruth","Naomi","Miriam"],ref:"Genesis 17:15"},
+  {q:"What is the first book of the Bible?",a:"Genesis",w:["Exodus","Psalms","Matthew","Job","Ruth","Acts"],ref:"Genesis 1:1"},
+  {q:"How many commandments did God give Moses?",a:"Ten",w:["Seven","Twelve","Five","Twenty","Eight","Fifteen"],ref:"Exodus 20"},
+
+  // ── OLD TESTAMENT STORIES ──
+  {q:"What was the name of the garden where Adam and Eve lived?",a:"Eden",w:["Paradise","Canaan","Gethsemane","Galilee","Sharon","Goshen"],ref:"Genesis 2:8"},
+  {q:"What was Adam made from?",a:"Dust",w:["Water","Clay","Stone","Wood","Sand","Mud"],ref:"Genesis 2:7"},
+  {q:"What did Eve eat in the Garden of Eden?",a:"Fruit",w:["Bread","Fish","Honey","Grain","Figs","Grapes"],ref:"Genesis 3:6"},
+  {q:"What was the mark God put on Cain?",a:"A mark",w:["A scar","A brand","A tattoo","A ring","A chain","A wound"],ref:"Genesis 4:15"},
+  {q:"How many people were on Noah's ark?",a:"Eight",w:["Four","Six","Ten","Two","Twelve","Seven"],ref:"1 Peter 3:20"},
+  {q:"What is the highest point the flood waters reached?",a:"Above the mountains",w:["The treetops","The clouds","The sky","The hills","The valleys","The plains"],ref:"Genesis 7:20"},
+  {q:"Where did Noah's ark come to rest?",a:"Ararat",w:["Sinai","Nebo","Carmel","Zion","Hermon","Lebanon"],ref:"Genesis 8:4"},
+  {q:"What did God use to mark his covenant with Noah?",a:"Rainbow",w:["Cloud","Fire","Wind","Star","River","Mountain"],ref:"Genesis 9:13"},
+  {q:"What were people building when God confused their language?",a:"Tower of Babel",w:["A temple","A city wall","A palace","A pyramid","An altar","A bridge"],ref:"Genesis 11:4"},
+  {q:"Where was Abraham from originally?",a:"Ur",w:["Haran","Canaan","Egypt","Babylon","Nineveh","Assyria"],ref:"Genesis 11:31"},
+  {q:"Who was Abraham's nephew?",a:"Lot",w:["Isaac","Ishmael","Nahor","Haran","Terah","Eliezer"],ref:"Genesis 12:5"},
+  {q:"What city was destroyed along with Sodom?",a:"Gomorrah",w:["Zoar","Admah","Zeboiim","Bela","Shinar","Nineveh"],ref:"Genesis 19:24"},
+  {q:"What did Lot's wife turn into?",a:"A pillar of salt",w:["A statue","A stone","A tree","A river","A cloud","A mountain"],ref:"Genesis 19:26"},
+  {q:"On which mountain did Abraham almost sacrifice Isaac?",a:"Moriah",w:["Sinai","Horeb","Carmel","Zion","Nebo","Hermon"],ref:"Genesis 22:2"},
+  {q:"How old was Abraham when Isaac was born?",a:"A hundred",w:["Seventy","Eighty","Ninety","Sixty","Fifty","Thirty"],ref:"Genesis 21:5"},
+  {q:"Who was Isaac's wife?",a:"Rebekah",w:["Rachel","Leah","Sarah","Ruth","Naomi","Miriam"],ref:"Genesis 24:67"},
+  {q:"Who was Jacob's twin brother?",a:"Esau",w:["Reuben","Levi","Simeon","Judah","Dan","Gad"],ref:"Genesis 25:26"},
+  {q:"What did Jacob trade Esau for his birthright?",a:"Stew",w:["Bread","Silver","Land","Wine","Sheep","Gold"],ref:"Genesis 25:29"},
+  {q:"With whom did Jacob wrestle all night?",a:"An angel",w:["A man","A lion","Esau","Laban","God","A stranger"],ref:"Genesis 32:24"},
+  {q:"What new name did God give Jacob?",a:"Israel",w:["Abraham","Moses","David","Solomon","Joseph","Samuel"],ref:"Genesis 32:28"},
+  {q:"Which of Jacob's sons was sold into slavery by his brothers?",a:"Joseph",w:["Reuben","Simeon","Levi","Judah","Benjamin","Dan"],ref:"Genesis 37:28"},
+  {q:"How much silver was Joseph sold for?",a:"Twenty pieces",w:["Ten pieces","Thirty pieces","Fifty pieces","Five pieces","Forty pieces","Fifteen pieces"],ref:"Genesis 37:28"},
+  {q:"What did Joseph do that angered his brothers?",a:"Wore a coat of many colors",w:["Stole their money","Beat them","Told their father lies","Took their flocks","Married first","Left the family"],ref:"Genesis 37:3"},
+  {q:"Where was Joseph imprisoned in Egypt?",a:"The king's prison",w:["A dungeon","A palace cell","A pit","A tower","A cave","A fortress"],ref:"Genesis 39:20"},
+  {q:"What did Pharaoh's baker dream about?",a:"Three baskets of bread",w:["Three loaves","Three birds","Three rivers","Three cups","A feast","White doves"],ref:"Genesis 40:16"},
+  {q:"What did Moses' mother do to save him from Pharaoh?",a:"Put him in a basket on the Nile",w:["Hid him in a cave","Sent him to Midian","Disguised him","Gave him to soldiers","Fled to Canaan","Buried him in sand"],ref:"Exodus 2:3"},
+  {q:"Who found baby Moses in the basket?",a:"Pharaoh's daughter",w:["A servant girl","Miriam","Pharaoh's wife","A midwife","A Hebrew woman","A merchant"],ref:"Exodus 2:5"},
+  {q:"Where was Moses when he saw the burning bush?",a:"Mount Horeb",w:["Mount Sinai","Mount Nebo","Mount Carmel","Mount Zion","Mount Moriah","Mount Hermon"],ref:"Exodus 3:1"},
+  {q:"What was Moses holding when God turned it into a serpent?",a:"A staff",w:["A rod","A branch","A sword","A stick","A cane","A spear"],ref:"Exodus 4:3"},
+  {q:"How many plagues did God send on Egypt?",a:"Ten",w:["Seven","Eight","Nine","Five","Twelve","Six"],ref:"Exodus 7–12"},
+  {q:"What was the last plague God sent on Egypt?",a:"Death of the firstborn",w:["Darkness","Locusts","Hail","Frogs","Lice","Boils"],ref:"Exodus 12:29"},
+  {q:"What did the Israelites put on their doorposts at Passover?",a:"Blood of a lamb",w:["Oil","Water","Wine","Salt","Honey","Ashes"],ref:"Exodus 12:7"},
+  {q:"How did God lead Israel through the wilderness by night?",a:"A pillar of fire",w:["A bright star","An angel","A cloud","A burning lamp","A torch","Thunder"],ref:"Exodus 13:21"},
+  {q:"What did God rain down from heaven to feed Israel?",a:"Manna",w:["Bread","Quail","Honey","Grain","Fish","Figs"],ref:"Exodus 16:4"},
+  {q:"What did Moses do to make water come from the rock?",a:"Struck it",w:["Prayed over it","Poured water on it","Spoke to it","Touched it","Anointed it","Sang to it"],ref:"Exodus 17:6"},
+  {q:"Who helped Moses hold up his arms during battle?",a:"Aaron and Hur",w:["Joshua and Caleb","Aaron and Joshua","Hur and Joshua","Eleazar and Ithamar","Nadab and Abihu","Miriam and Aaron"],ref:"Exodus 17:12"},
+  {q:"How long did Moses spend on Mount Sinai receiving the Law?",a:"Forty days",w:["Seven days","Twenty days","Thirty days","Three days","Ten days","Fourteen days"],ref:"Exodus 24:18"},
+  {q:"What did the Israelites make while Moses was on the mountain?",a:"A golden calf",w:["A silver statue","A wooden idol","A stone altar","A bronze snake","An idol of Baal","A carved image"],ref:"Exodus 32:4"},
+  {q:"How many years did Israel wander in the wilderness?",a:"Forty",w:["Seven","Twenty","Thirty","Ten","Fifty","Twelve"],ref:"Numbers 32:13"},
+  {q:"Who were the two spies who gave a good report of Canaan?",a:"Caleb and Joshua",w:["Moses and Aaron","Phinehas and Eleazar","Gad and Asher","Reuben and Simeon","Dan and Naphtali","Zebulun and Issachar"],ref:"Numbers 14:6"},
+  {q:"What animal spoke to Balaam?",a:"A donkey",w:["A horse","An ox","A camel","A raven","A dove","A serpent"],ref:"Numbers 22:28"},
+  {q:"What fell down when Israel marched around Jericho?",a:"The walls",w:["The gates","The towers","The army","The king","The houses","The idols"],ref:"Joshua 6:20"},
+  {q:"How many times did Israel march around Jericho on the seventh day?",a:"Seven",w:["Three","Once","Twice","Four","Six","Five"],ref:"Joshua 6:15"},
+  {q:"Who was the prostitute who hid the Israelite spies in Jericho?",a:"Rahab",w:["Deborah","Jael","Ruth","Naomi","Tamar","Bathsheba"],ref:"Joshua 2:1"},
+  {q:"What did Gideon use to defeat the Midianites?",a:"Trumpets and torches",w:["Swords and shields","Bows and arrows","Stones and slings","Spears and nets","Fire and water","Horns and lamps"],ref:"Judges 7:20"},
+  {q:"How many men did Gideon have in his final army?",a:"Three hundred",w:["Ten thousand","Three thousand","Twelve thousand","One thousand","Five hundred","Six hundred"],ref:"Judges 7:7"},
+  {q:"Who was the judge who made a vow involving his daughter?",a:"Jephthah",w:["Gideon","Samson","Eli","Samuel","Saul","Deborah"],ref:"Judges 11:30"},
+  {q:"Where was Samson's strength ultimately revealed to Delilah?",a:"His hair had never been cut",w:["He prayed constantly","He fasted often","He wore an amulet","He carried God's staff","He anointed himself","He wore a special robe"],ref:"Judges 16:17"},
+  {q:"What did Ruth say she would never leave Naomi?",a:"Where you go I will go",w:["I will serve you always","Your family is my family","I will never leave you alone","You are my mother now","I will follow your God","I will stay by your side"],ref:"Ruth 1:16"},
+  {q:"Who was Ruth's husband in Bethlehem?",a:"Boaz",w:["Elimelech","Mahlon","Chilion","Obed","Jesse","Salmon"],ref:"Ruth 4:13"},
+  {q:"Who was Samuel's mother?",a:"Hannah",w:["Elizabeth","Mary","Naomi","Ruth","Miriam","Deborah"],ref:"1 Samuel 1:20"},
+  {q:"As a child, Samuel thought God's voice was whose?",a:"Eli the priest",w:["His mother Hannah","His father Elkanah","Moses","Aaron","A stranger","An angel"],ref:"1 Samuel 3:8"},
+  {q:"What weapon did David use to kill Goliath?",a:"A sling and stone",w:["A sword","A bow and arrow","A spear","A club","A javelin","An axe"],ref:"1 Samuel 17:49"},
+  {q:"What was David doing when Samuel anointed him king?",a:"Tending sheep",w:["Plowing fields","Fighting lions","Singing songs","Carrying water","Harvesting grain","Building a house"],ref:"1 Samuel 16:11"},
+  {q:"Who was David's closest friend?",a:"Jonathan",w:["Samuel","Nathan","Joab","Uriah","Hushai","Ittai"],ref:"1 Samuel 18:1"},
+  {q:"What was the name of the woman David saw bathing?",a:"Bathsheba",w:["Abigail","Ahinoam","Michal","Tamar","Rizpah","Abishag"],ref:"2 Samuel 11:3"},
+  {q:"What prophet confronted David about his sin with Bathsheba?",a:"Nathan",w:["Samuel","Elijah","Isaiah","Gad","Ahijah","Micaiah"],ref:"2 Samuel 12:1"},
+  {q:"How did Solomon settle the dispute between two women over a baby?",a:"He offered to cut the baby in half",w:["He prayed for wisdom","He asked the mothers to prove it","He used a test of fire","He checked their clothing","He asked the elders","He consulted the priests"],ref:"1 Kings 3:25"},
+  {q:"How many years did it take Solomon to build the Temple?",a:"Seven",w:["Ten","Three","Twelve","Twenty","Forty","Five"],ref:"1 Kings 6:38"},
+  {q:"What queen came from afar to test Solomon's wisdom?",a:"Queen of Sheba",w:["Queen of Egypt","Queen of Babylon","Queen of Persia","Queen Esther","Queen Jezebel","Queen of Ethiopia"],ref:"1 Kings 10:1"},
+  {q:"What did Elijah challenge the prophets of Baal to on Mount Carmel?",a:"A contest with fire from heaven",w:["A prayer contest","A wrestling match","A race","A sacrifice contest","A fasting contest","A singing contest"],ref:"1 Kings 18:24"},
+  {q:"How many prophets of Baal were on Mount Carmel?",a:"Four hundred and fifty",w:["One hundred","Two hundred","Four hundred","Seven hundred","Three hundred","Five hundred"],ref:"1 Kings 18:22"},
+  {q:"Who succeeded Elijah as prophet?",a:"Elisha",w:["Amos","Hosea","Isaiah","Micah","Jonah","Joel"],ref:"1 Kings 19:16"},
+  {q:"What did Elisha do to the widow's oil?",a:"Multiplied it",w:["Turned it to wine","Made it holy","Purified it","Changed its color","Heated it","Divided it"],ref:"2 Kings 4:6"},
+  {q:"Who was the Syrian commander healed of leprosy by Elisha?",a:"Naaman",w:["Gehazi","Hazael","Ben-Hadad","Rezin","Shalmaneser","Sennacherib"],ref:"2 Kings 5:14"},
+  {q:"In what river did Naaman wash to be healed?",a:"Jordan",w:["Abana","Pharpar","Euphrates","Nile","Tigris","Kishon"],ref:"2 Kings 5:14"},
+  {q:"What happened to Jonah after he was thrown overboard?",a:"Swallowed by a great fish",w:["He swam to shore","He drowned","He was rescued by sailors","An angel saved him","He floated on a plank","He washed onto a beach"],ref:"Jonah 1:17"},
+  {q:"How many days was Jonah inside the fish?",a:"Three days and nights",w:["Seven days","One day","Two days","Four days","Forty days","Ten days"],ref:"Jonah 1:17"},
+  {q:"To what city was Jonah sent to preach?",a:"Nineveh",w:["Babylon","Tyre","Sidon","Jericho","Jerusalem","Damascus"],ref:"Jonah 1:2"},
+  {q:"Which king of Judah found the Book of the Law in the Temple?",a:"Josiah",w:["Hezekiah","Jehoshaphat","Joash","Asa","Solomon","Uzziah"],ref:"2 Kings 22:8"},
+  {q:"Who threw Shadrach Meshach and Abednego into the fiery furnace?",a:"Nebuchadnezzar",w:["Darius","Cyrus","Belshazzar","Artaxerxes","Sennacherib","Tiglath-Pileser"],ref:"Daniel 3:19"},
+  {q:"How many men were thrown into the furnace?",a:"Three",w:["Two","Four","One","Five","Seven","Six"],ref:"Daniel 3:23"},
+  {q:"What appeared on the wall at Belshazzar's feast?",a:"A hand writing",w:["A face","A sword","Words of fire","An angel","A vision","A sign in the sky"],ref:"Daniel 5:5"},
+  {q:"Who was the Persian king who threw Daniel into the lions' den?",a:"Darius",w:["Cyrus","Xerxes","Artaxerxes","Nebuchadnezzar","Belshazzar","Cambyses"],ref:"Daniel 6:16"},
+  {q:"Who was Esther's enemy in the Persian court?",a:"Haman",w:["Mordecai","Xerxes","Artaxerxes","Memucan","Carshena","Admatha"],ref:"Esther 3:1"},
+  {q:"For how many days did Esther fast before going to the king?",a:"Three",w:["Seven","One","Ten","Forty","Five","Two"],ref:"Esther 4:16"},
+  {q:"Who rebuilt the walls of Jerusalem after the exile?",a:"Nehemiah",w:["Ezra","Zerubbabel","Joshua","Jeshua","Zechariah","Haggai"],ref:"Nehemiah 2:17"},
+  {q:"Which prophet was known as the weeping prophet?",a:"Jeremiah",w:["Isaiah","Ezekiel","Hosea","Amos","Micah","Habakkuk"],ref:"Jeremiah 9:1"},
+  {q:"What was Isaiah's commission in the year King Uzziah died?",a:"To preach to Israel",w:["To rebuild the temple","To gather the exiles","To confront Pharaoh","To write the Law","To anoint the king","To fast forty days"],ref:"Isaiah 6:8"},
+  {q:"What did Ezekiel see in his famous vision?",a:"Four living creatures and wheels",w:["A burning throne","A ladder to heaven","A valley of dry bones","Seven lampstands","A sea of glass","A heavenly temple"],ref:"Ezekiel 1:5"},
+  {q:"In Ezekiel's vision what came to the valley of dry bones?",a:"The breath of God",w:["Rain from heaven","Fire from God","An earthquake","Wind from the north","A great light","Angels"],ref:"Ezekiel 37:9"},
+  // ── NEW TESTAMENT STORIES ──
+  {q:"Who were the first disciples Jesus called?",a:"Peter and Andrew",w:["James and John","Philip and Nathanael","Matthew and Thomas","Judas and Simon","Bartholomew and James","Thaddaeus and Simon"],ref:"Matthew 4:18"},
+  {q:"What did Jesus say his disciples would be fishers of?",a:"Men",w:["Souls","Hearts","Nations","People","Sinners","The lost"],ref:"Matthew 4:19"},
+  {q:"Where did Jesus give the Sermon on the Mount?",a:"A hillside",w:["The temple","A synagogue","The Jordan River","Capernaum","Jerusalem","The Sea of Galilee"],ref:"Matthew 5:1"},
+  {q:"How many Beatitudes are in the Sermon on the Mount?",a:"Eight",w:["Seven","Ten","Nine","Six","Twelve","Five"],ref:"Matthew 5:3-10"},
+  {q:"What did Jesus say the meek would inherit?",a:"The earth",w:["Heaven","God's kingdom","Eternal life","God's mercy","The promise","All things"],ref:"Matthew 5:5"},
+  {q:"What did Jesus say we should do to our enemies?",a:"Love them",w:["Forgive them","Pray for them","Avoid them","Be kind to them","Help them","Bless them"],ref:"Matthew 5:44"},
+  {q:"What prayer did Jesus teach his disciples?",a:"The Lord's Prayer",w:["The Psalms","The Shema","A daily blessing","The Magnificat","The Benedictus","A priestly prayer"],ref:"Matthew 6:9"},
+  {q:"What did Jesus say you cannot serve alongside God?",a:"Money",w:["Fame","Power","Pleasure","Idols","Pride","The world"],ref:"Matthew 6:24"},
+  {q:"What did Jesus say about those who knock?",a:"The door shall be opened",w:["They shall find","They shall receive","They shall enter","They shall be heard","They shall see God","They shall live"],ref:"Matthew 7:8"},
+  {q:"How many loaves did Jesus use to feed the five thousand?",a:"Five",w:["Two","Three","Seven","Ten","Twelve","Four"],ref:"Matthew 14:17"},
+  {q:"How many fish were there when Jesus fed five thousand?",a:"Two",w:["Three","Seven","Five","One","Four","Twelve"],ref:"Matthew 14:17"},
+  {q:"What did Jesus walk on that amazed his disciples?",a:"Water",w:["Fire","Clouds","Air","The wind","A river","The sea floor"],ref:"Matthew 14:25"},
+  {q:"What did Jesus say to Peter when he began to sink?",a:"O thou of little faith",w:["Come back to me","Why did you doubt","Do not be afraid","Look only to me","Trust in God","Be not afraid"],ref:"Matthew 14:31"},
+  {q:"What did Jesus say was the greatest commandment?",a:"Love God with all your heart",w:["Do not murder","Keep the Sabbath","Love your neighbor","Honor your parents","Do not steal","Do not covet"],ref:"Matthew 22:37"},
+  {q:"What is the second greatest commandment?",a:"Love your neighbor as yourself",w:["Honor your father and mother","Do not steal","Keep the Sabbath","Do not murder","Do not lie","Trust in God"],ref:"Matthew 22:39"},
+  {q:"How much did Judas receive to betray Jesus?",a:"Thirty pieces of silver",w:["Twenty pieces","Fifty pieces","A hundred pieces","Ten pieces","Forty pieces","Five pieces"],ref:"Matthew 26:15"},
+  {q:"What was the name of the place where Jesus was crucified?",a:"Golgotha",w:["Gethsemane","Calvary","Bethany","Kidron","Siloam","Bethesda"],ref:"Matthew 27:33"},
+  {q:"Who carried Jesus' cross when he was too weak?",a:"Simon of Cyrene",w:["John the apostle","Peter","Joseph of Arimathea","Barabbas","Nicodemus","Lazarus"],ref:"Matthew 27:32"},
+  {q:"For how many hours was darkness over the land when Jesus died?",a:"Three",w:["Six","One","Two","Four","Seven","Twelve"],ref:"Matthew 27:45"},
+  {q:"Who asked Pilate for Jesus' body after the crucifixion?",a:"Joseph of Arimathea",w:["Nicodemus","Mary Magdalene","John","Peter","The high priest","Lazarus"],ref:"Matthew 27:57"},
+  {q:"Who was the first person to see the risen Jesus?",a:"Mary Magdalene",w:["Peter","John","Mary the mother of Jesus","Salome","Joanna","Martha"],ref:"John 20:14"},
+  {q:"Where did Jesus tell his disciples to wait for the Holy Spirit?",a:"Jerusalem",w:["Bethlehem","Nazareth","Capernaum","Galilee","Bethany","Jericho"],ref:"Acts 1:4"},
+  {q:"On what Jewish feast did the Holy Spirit come at Pentecost?",a:"Pentecost",w:["Passover","Tabernacles","Purim","Firstfruits","Trumpets","Atonement"],ref:"Acts 2:1"},
+  {q:"What appeared over the disciples' heads at Pentecost?",a:"Tongues of fire",w:["Doves","Angels","A bright light","A cloud","Lightning","Stars"],ref:"Acts 2:3"},
+  {q:"How many were added to the church on the day of Pentecost?",a:"Three thousand",w:["One thousand","Five thousand","Two thousand","Seven thousand","Ten thousand","Five hundred"],ref:"Acts 2:41"},
+  {q:"Who was the first Christian martyr?",a:"Stephen",w:["James","Philip","Barnabas","Silas","Timothy","Apollos"],ref:"Acts 7:59"},
+  {q:"Who held the cloaks of those who stoned Stephen?",a:"Saul",w:["Ananias","Barnabas","Agabus","Philip","Cornelius","Felix"],ref:"Acts 7:58"},
+  {q:"On which road did Paul have his conversion experience?",a:"Road to Damascus",w:["Road to Jericho","Road to Jerusalem","Road to Gaza","Road to Caesarea","Road to Antioch","Road to Rome"],ref:"Acts 9:3"},
+  {q:"Who baptized Paul after his conversion?",a:"Ananias",w:["Barnabas","Peter","Stephen","Philip","Silas","Timothy"],ref:"Acts 9:18"},
+  {q:"How did Paul escape from Damascus after his conversion?",a:"Lowered in a basket",w:["Through a secret gate","By night on horseback","Disguised as a soldier","Through the city sewers","Hidden in a wagon","By ship on the river"],ref:"Acts 9:25"},
+  {q:"Who was the Gentile centurion that Peter baptized?",a:"Cornelius",w:["Julius","Claudius","Publius","Lysimachus","Tertius","Crispus"],ref:"Acts 10:1"},
+  {q:"Who were Paul's companions on his first missionary journey?",a:"Barnabas and Mark",w:["Silas and Timothy","Luke and Titus","Aquila and Priscilla","Apollos and Silas","Timothy and Titus","Barnabas and Silas"],ref:"Acts 13:2"},
+  {q:"In what city did Paul and Silas sing hymns in prison?",a:"Philippi",w:["Corinth","Ephesus","Thessalonica","Athens","Rome","Antioch"],ref:"Acts 16:25"},
+  {q:"What happened to Paul and Silas when they sang in prison?",a:"An earthquake opened the doors",w:["The guard fell asleep","Angels appeared","A light shone in","The chains fell off","God spoke from heaven","A fire appeared"],ref:"Acts 16:26"},
+  {q:"On what island was Paul shipwrecked on his way to Rome?",a:"Malta",w:["Cyprus","Crete","Sicily","Sardinia","Rhodes","Patmos"],ref:"Acts 28:1"},
+  {q:"What bit Paul on the hand at Malta?",a:"A viper",w:["A scorpion","A spider","A wasp","A hornet","A snake","A lizard"],ref:"Acts 28:3"},
+  // ── PEOPLE OF THE BIBLE ──
+  {q:"Who was the oldest person in the Bible?",a:"Methuselah",w:["Noah","Adam","Seth","Enoch","Jared","Lamech"],ref:"Genesis 5:27"},
+  {q:"How old did Methuselah live to be?",a:"Nine hundred sixty-nine",w:["Nine hundred fifty","Nine hundred thirty","Eight hundred ninety","Nine hundred twelve","Eight hundred seventy","Nine hundred five"],ref:"Genesis 5:27"},
+  {q:"Who was known as the father of faith?",a:"Abraham",w:["Moses","Noah","David","Jacob","Isaac","Samuel"],ref:"Romans 4:11"},
+  {q:"Who was the first person to be described as a man after God's own heart?",a:"David",w:["Abraham","Moses","Samuel","Solomon","Elijah","Nehemiah"],ref:"1 Samuel 13:14"},
+  {q:"What was Mary Magdalene's occupation before following Jesus?",a:"She had seven demons cast out",w:["She was a tax collector","She was a fisherman's wife","She was a widow","She was a servant","She was a merchant","She was a healer"],ref:"Luke 8:2"},
+  {q:"Who was the tax collector Jesus called to be a disciple?",a:"Matthew",w:["Zacchaeus","Luke","Simon","Philip","Nathanael","Thomas"],ref:"Matthew 9:9"},
+  {q:"What did Zacchaeus promise to give to the poor?",a:"Half his goods",w:["All his wealth","A tenth","All his income","His house","Two thirds of his money","A quarter of his goods"],ref:"Luke 19:8"},
+  {q:"Who was known as the Beloved Disciple?",a:"John",w:["Peter","James","Andrew","Philip","Thomas","Nathanael"],ref:"John 13:23"},
+  {q:"Which apostle was a twin?",a:"Thomas",w:["James","Philip","Andrew","Simon","Bartholomew","Thaddaeus"],ref:"John 11:16"},
+  {q:"Who was Lydia in the New Testament?",a:"A seller of purple cloth",w:["A prophetess","A widow","A synagogue leader","A Roman official's wife","A fisherman's wife","A tax collector"],ref:"Acts 16:14"},
+  {q:"What couple lied about money in the early church and died?",a:"Ananias and Sapphira",w:["Priscilla and Aquila","Eunice and Timothy","Mary and Joseph","Barnabas and Mary","Philemon and Apphia","Zacharias and Elizabeth"],ref:"Acts 5:1"},
+  {q:"Who was Timothy's mother?",a:"Eunice",w:["Lois","Priscilla","Lydia","Phoebe","Julia","Claudia"],ref:"2 Timothy 1:5"},
+  {q:"Who was the Ethiopian eunuch baptized by?",a:"Philip",w:["Peter","Paul","Barnabas","Ananias","Stephen","Silas"],ref:"Acts 8:38"},
+  {q:"Who was Barnabas' cousin?",a:"Mark",w:["Luke","Silas","Timothy","Titus","Apollos","Epaphras"],ref:"Colossians 4:10"},
+  {q:"Who was described as an eloquent man mighty in the Scriptures?",a:"Apollos",w:["Barnabas","Timothy","Titus","Silas","Aquila","Epaphroditus"],ref:"Acts 18:24"},
+  {q:"Who wrote most of the New Testament letters?",a:"Paul",w:["Peter","John","James","Luke","Mark","Barnabas"],ref:"2 Peter 3:16"},
+  // ── BOOKS OF THE BIBLE ──
+  {q:"How many books are in the Old Testament?",a:"Thirty-nine",w:["Twenty-seven","Forty","Thirty","Fifty","Thirty-five","Forty-five"],ref:""},
+  {q:"How many books are in the New Testament?",a:"Twenty-seven",w:["Thirty-nine","Twenty","Thirty","Twenty-five","Forty","Twenty-two"],ref:""},
+  {q:"What is the longest book in the Bible?",a:"Psalms",w:["Isaiah","Jeremiah","Genesis","Ezekiel","Numbers","Deuteronomy"],ref:""},
+  {q:"What is the shortest book in the Old Testament?",a:"Obadiah",w:["Haggai","Nahum","Malachi","Zephaniah","Joel","Micah"],ref:""},
+  {q:"What is the shortest book in the New Testament?",a:"2 John",w:["3 John","Jude","Philemon","Obadiah","Titus","2 Peter"],ref:""},
+  {q:"Which book of the Bible contains the Ten Commandments?",a:"Exodus",w:["Leviticus","Deuteronomy","Numbers","Genesis","Joshua","Judges"],ref:"Exodus 20"},
+  {q:"Which book records the history of the early church?",a:"Acts",w:["Romans","Hebrews","James","Luke","John","Mark"],ref:"Acts 1:1"},
+  {q:"Who wrote the Gospel of Luke?",a:"Luke",w:["Mark","Matthew","John","Paul","Peter","Barnabas"],ref:"Luke 1:3"},
+  {q:"Which Gospel begins with 'In the beginning was the Word'?",a:"John",w:["Matthew","Mark","Luke","Acts","Romans","Genesis"],ref:"John 1:1"},
+  {q:"Which book contains the Beatitudes?",a:"Matthew",w:["Luke","John","Mark","Romans","James","Psalms"],ref:"Matthew 5:3"},
+  {q:"Which Old Testament book is mostly poetry and songs of praise?",a:"Psalms",w:["Proverbs","Song of Solomon","Job","Ecclesiastes","Lamentations","Isaiah"],ref:""},
+  {q:"Which book contains the famous love chapter?",a:"1 Corinthians",w:["Romans","Ephesians","Philippians","Colossians","Galatians","1 Thessalonians"],ref:"1 Corinthians 13"},
+  {q:"Which book talks about wisdom saying 'Vanity of vanities'?",a:"Ecclesiastes",w:["Proverbs","Psalms","Job","Song of Solomon","Lamentations","Isaiah"],ref:"Ecclesiastes 1:2"},
+  {q:"Which book of the Bible is about the sufferings of a righteous man?",a:"Job",w:["Psalms","Lamentations","Ecclesiastes","Isaiah","Habakkuk","Hosea"],ref:"Job 1:1"},
+  {q:"Which New Testament book is written as a letter to a runaway slave's owner?",a:"Philemon",w:["Titus","2 Timothy","James","3 John","Jude","Hebrews"],ref:"Philemon 1:10"},
+  // ── VERSES AND QUOTES ──
+  {q:"Complete this verse: 'For God so loved the world that he gave his only begotten Son...'",a:"That whosoever believeth",w:["That no one should perish","That the world might be saved","That all might have life","That sin is forgiven","That death has no sting","That we might be called children"],ref:"John 3:16"},
+  {q:"Psalm 23 begins 'The LORD is my shepherd...'  what comes next?",a:"I shall not want",w:["I shall not fear","I am at rest","He leads me","I am not alone","He protects me","He is my light"],ref:"Psalm 23:1"},
+  {q:"Who said 'I am the way the truth and the life'?",a:"Jesus",w:["Paul","John","Peter","Moses","An angel","The Holy Spirit"],ref:"John 14:6"},
+  {q:"Complete: 'I can do all things through Christ...'",a:"Which strengtheneth me",w:["Who is my Lord","Who died for me","Who lives in me","Who saves me","Who loves me","Who is with me"],ref:"Philippians 4:13"},
+  {q:"Proverbs 3:5 says to trust the LORD with all your heart and...",a:"Lean not on your own understanding",w:["Seek wisdom daily","Walk in his ways","Fear the Lord always","Love your neighbor","Keep his commands","Worship him in spirit"],ref:"Proverbs 3:5"},
+  {q:"What does John 3:16 say God gave to the world?",a:"His only begotten Son",w:["His Holy Spirit","His law","His blessing","His peace","His love","His grace"],ref:"John 3:16"},
+  {q:"Romans 3:23 says all have sinned and...",a:"Fall short of the glory of God",w:["Need a savior","Deserve death","Must repent","Face judgment","Are separated from God","Are lost without hope"],ref:"Romans 3:23"},
+  {q:"What does Romans 6:23 say is the wages of sin?",a:"Death",w:["Suffering","Separation","Shame","Destruction","Darkness","Judgment"],ref:"Romans 6:23"},
+  {q:"What does Romans 6:23 say is the gift of God?",a:"Eternal life in Christ Jesus",w:["Forgiveness of sins","The Holy Spirit","Peace with God","Salvation","Righteousness","Justification"],ref:"Romans 6:23"},
+  {q:"Joshua 1:9 says 'Be strong and of good courage' — why?",a:"For the LORD your God is with you",w:["For I have given you this land","For you will not be defeated","For I have prepared the way","For your enemies will flee","For I am your shield","For victory belongs to God"],ref:"Joshua 1:9"},
+  {q:"Jeremiah 29:11 says God has plans to give us a future and...",a:"A hope",w:["A blessing","A land","A family","A promise","A crown","A covenant"],ref:"Jeremiah 29:11"},
+  {q:"What does Hebrews 11:1 say faith is?",a:"The substance of things hoped for",w:["Believing without seeing","Trust in God alone","Complete obedience","Confidence in God","Certainty of truth","Full surrender"],ref:"Hebrews 11:1"},
+  {q:"What does Matthew 5:9 say about peacemakers?",a:"They shall be called children of God",w:["They shall inherit the earth","They shall see God","They shall receive mercy","They shall enter the kingdom","They shall be comforted","They shall be satisfied"],ref:"Matthew 5:9"},
+  {q:"What does Philippians 4:7 say passes all understanding?",a:"The peace of God",w:["God's love","God's wisdom","God's power","God's mercy","God's grace","God's joy"],ref:"Philippians 4:7"},
+  {q:"Isaiah 40:31 says those who wait on the LORD shall mount up with wings as...",a:"Eagles",w:["Doves","Hawks","Sparrows","Angels","Birds","Swallows"],ref:"Isaiah 40:31"},
+  // ── NUMBERS IN THE BIBLE ──
+  {q:"How many days and nights did Jesus fast in the wilderness?",a:"Forty",w:["Seven","Twenty","Thirty","Ten","Fourteen","Three"],ref:"Matthew 4:2"},
+  {q:"How many times should you forgive someone according to Jesus?",a:"Seventy times seven",w:["Seven times","Forty times","Seventy times","Three times","As many as needed","A hundred times"],ref:"Matthew 18:22"},
+  {q:"How many silver coins did the woman search for in Jesus' parable?",a:"Ten",w:["Seven","Five","Three","Twelve","Twenty","Eight"],ref:"Luke 15:8"},
+  {q:"How many days after his resurrection did Jesus appear to his disciples?",a:"Forty",w:["Three","Seven","Ten","Fourteen","Twenty","Twelve"],ref:"Acts 1:3"},
+  {q:"How many people were in the upper room when Pentecost came?",a:"A hundred and twenty",w:["Twelve","Seventy","Three thousand","Five hundred","Fifty","Forty"],ref:"Acts 1:15"},
+  {q:"How many stones did David pick up before fighting Goliath?",a:"Five",w:["One","Three","Seven","Ten","Two","Four"],ref:"1 Samuel 17:40"},
+  {q:"How many years did Israel serve as slaves in Egypt?",a:"Four hundred and thirty",w:["Four hundred","Four hundred years","Three hundred","Two hundred","Five hundred","Three hundred fifty"],ref:"Exodus 12:40"},
+  {q:"How many tribes of Israel were there?",a:"Twelve",w:["Ten","Seven","Eight","Fifteen","Nine","Thirteen"],ref:"Genesis 49:28"},
+  {q:"How many chapters are in the book of Psalms?",a:"One hundred fifty",w:["One hundred","One hundred twenty","Two hundred","Eighty","One hundred sixty","One hundred thirty"],ref:""},
+  {q:"How many sons did Job have?",a:"Seven",w:["Three","Ten","Five","Twelve","Four","Eight"],ref:"Job 1:2"},
+  {q:"How many daughters did Job have?",a:"Three",w:["Seven","Two","One","Five","Four","Six"],ref:"Job 1:2"},
+  {q:"How many wise men visited Jesus? (The Bible's answer)",a:"The Bible does not say",w:["Three","Two","Four","Seven","Twelve","Five"],ref:"Matthew 2:1"},
+  {q:"How old was Jesus when he began his ministry?",a:"About thirty",w:["Twenty-five","Thirty-three","Forty","Twenty","Thirty-five","Twenty-eight"],ref:"Luke 3:23"},
+  {q:"How many people did Jesus appear to after his resurrection according to Paul?",a:"Five hundred at once",w:["Twelve","Seventy","One hundred twenty","Three thousand","Two","A thousand"],ref:"1 Corinthians 15:6"},
+  // ── PLACES IN THE BIBLE ──
+  {q:"Where did Jesus grow up?",a:"Nazareth",w:["Bethlehem","Capernaum","Jerusalem","Jericho","Hebron","Galilee"],ref:"Luke 2:39"},
+  {q:"Where was Jesus baptized?",a:"Jordan River",w:["Sea of Galilee","Dead Sea","Nile","Red Sea","Pool of Siloam","Spring of Elisha"],ref:"Matthew 3:13"},
+  {q:"In what sea did Jesus calm the storm?",a:"Sea of Galilee",w:["Red Sea","Dead Sea","Mediterranean Sea","Jordan River","Great Sea","Lake Gennesaret"],ref:"Mark 4:39"},
+  {q:"What city did Paul preach in on Mars Hill?",a:"Athens",w:["Corinth","Ephesus","Rome","Philippi","Thessalonica","Colossae"],ref:"Acts 17:22"},
+  {q:"On what island was John when he wrote Revelation?",a:"Patmos",w:["Malta","Cyprus","Crete","Rhodes","Samos","Cos"],ref:"Revelation 1:9"},
+  {q:"Where was the Tower of Babel being built?",a:"Shinar",w:["Babylon","Nineveh","Ur","Haran","Sumer","Akkad"],ref:"Genesis 11:2"},
+  {q:"Where did Israel cross the Red Sea on dry ground?",a:"Through the parted waters",w:["On a bridge of reeds","On a sandbar","At a shallow ford","God made a path in the sand","By swimming across","On boats of papyrus"],ref:"Exodus 14:22"},
+  {q:"In what city did Paul spend two years under house arrest?",a:"Rome",w:["Caesarea","Ephesus","Corinth","Antioch","Alexandria","Athens"],ref:"Acts 28:30"},
+  {q:"Where did Jesus feed the five thousand?",a:"A deserted place near Bethsaida",w:["By the Sea of Galilee","On a mountain near Jerusalem","In Capernaum","Near Jericho","In the Jordan valley","Near the Dead Sea"],ref:"Luke 9:10"},
+  {q:"In what city were believers first called Christians?",a:"Antioch",w:["Jerusalem","Corinth","Rome","Ephesus","Damascus","Caesarea"],ref:"Acts 11:26"},
+
+];
+
+const END_VERSES = [
+  {t:"Thy word have I hid in mine heart, that I might not sin against thee.",r:"Psalm 119:11"},
+  {t:"I can do all things through Christ which strengtheneth me.",r:"Philippians 4:13"},
+  {t:"The LORD is my shepherd; I shall not want.",r:"Psalm 23:1"},
+  {t:"Be strong and of a good courage; be not afraid.",r:"Joshua 1:9"},
+  {t:"With God all things are possible.",r:"Matthew 19:26"},
+  {t:"Greater is he that is in you, than he that is in the world.",r:"1 John 4:4"},
+];
+
+// ═══════════════════════════════════════════════════════
+//  CANVAS SETUP
+// ═══════════════════════════════════════════════════════
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W = 0, H = 0, CTRL_H = 0;
+const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth < 600;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  CTRL_H = isMobile ? 72 : 0;
+  GROUND = H - CTRL_H - 8;
+}
+let GROUND = 0;
+resize();
+window.addEventListener('resize', resize);
+
+if (isMobile) {
+  document.getElementById('mctrl').style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let state = 'home'; // home | playing | paused | over
+let diff = 1;
+let score = 0, wave = 1, lives = 3, combo = 1, bestCombo = 1;
+let highScore = parseInt(localStorage.getItem('sb_high') || '0');
+let raf = null;
+let paused = false;
+let qPool = [], curQ = null;
+let answered = false;
+let nextQTimer = 0;
+
+document.getElementById('homeHigh').textContent = highScore.toLocaleString();
+
+// ═══════════════════════════════════════════════════════
+//  PLAYER
+// ═══════════════════════════════════════════════════════
+const SHIP = { x: 0, y: 0, w: 38, h: 28, speed: 5.5, color: '#c9973a' };
+const keys = {};
+
+// ═══════════════════════════════════════════════════════
+//  BULLETS
+// ═══════════════════════════════════════════════════════
+let bullets = [];
+let lastShot = 0;
+const SHOT_COOLDOWN = 280; // ms
+
+// ═══════════════════════════════════════════════════════
+//  WORD TARGETS (enemies)
+// ═══════════════════════════════════════════════════════
+let targets = [];
+
+// ═══════════════════════════════════════════════════════
+//  PARTICLES
+// ═══════════════════════════════════════════════════════
+let particles = [];
+
+// ═══════════════════════════════════════════════════════
+//  FLASH MESSAGES
+// ═══════════════════════════════════════════════════════
+let flashes = [];
+
+// ═══════════════════════════════════════════════════════
+//  STARS BACKGROUND
+// ═══════════════════════════════════════════════════════
+let stars = [];
+function makeStars() {
+  stars = [];
+  for (let i = 0; i < 90; i++) {
+    stars.push({
+      x: Math.random() * 800,
+      y: Math.random() * 700,
+      r: Math.random() * 1.3,
+      a: Math.random() * 0.55 + 0.05,
+      blink: Math.random() * Math.PI * 2,
+    });
+  }
+}
+makeStars();
+
+// ═══════════════════════════════════════════════════════
+//  INPUT
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown', function(e) {
+  keys[e.code] = true;
+  if (e.code === 'Space') { e.preventDefault(); tryShoot(); }
+  if (e.code === 'Escape' || e.code === 'KeyP') { if (state === 'playing' || state === 'paused') togglePause(); }
+});
+document.addEventListener('keyup', function(e) { keys[e.code] = false; });
+
+// Mobile buttons
+const mcleft = document.getElementById('mcleft');
+const mcright = document.getElementById('mcright');
+const mcfire = document.getElementById('mcfire');
+function addTouch(el, code) {
+  el.addEventListener('touchstart', function(e) { keys[code] = true; e.preventDefault(); }, {passive:false});
+  el.addEventListener('touchend', function(e) { keys[code] = false; e.preventDefault(); }, {passive:false});
+}
+addTouch(mcleft, 'ArrowLeft');
+addTouch(mcright, 'ArrowRight');
+mcfire.addEventListener('touchstart', function(e) { tryShoot(); e.preventDefault(); }, {passive:false});
+
+function tryShoot() {
+  if (state !== 'playing' || paused) return;
+  const now = Date.now();
+  if (now - lastShot < SHOT_COOLDOWN) return;
+  lastShot = now;
+  bullets.push({ x: SHIP.x, y: SHIP.y - SHIP.h / 2 - 4, vy: -14, r: 4 });
+}
+
+// ═══════════════════════════════════════════════════════
+//  QUESTION MANAGEMENT
+// ═══════════════════════════════════════════════════════
+function pickQuestion() {
+  if (qPool.length === 0) qPool = shuffle([...QS]);
+  curQ = qPool.pop();
+  answered = false;
+  nextQTimer = 0;
+
+  // How many wrong answers depends on wave & diff
+  const wrongCount = Math.min(2 + wave + (diff - 1), curQ.w.length, 5);
+  const wrongs = shuffle([...curQ.w]).slice(0, wrongCount);
+  const all = shuffle([curQ.a, ...wrongs]);
+  const WORD_COLORS = ['#e8e0d0','#7ec8e3','#a8d8a8','#e8c97a','#c8a8e8','#e8a878'];
+
+  // Mobile: exactly 2 answers side by side — no overlap possible
+  const maxTargets = isMobile ? 2 : all.length;
+  const displayAll = all.slice(0, maxTargets);
+  const cols = displayAll.length;
+  const colW = (W - 16) / cols;
+
+  targets = displayAll.map(function(word, i) {
+    return {
+      word: word,
+      isAnswer: word === curQ.a,
+      x: 8 + colW * i + colW / 2,
+      y: -50 - Math.random() * 30,
+      vy: (0.35 + wave * 0.08 + diff * 0.12) * (0.8 + Math.random() * 0.4),
+      w: 0, h: 30,
+      hit: false,
+      hitTimer: 0,
+      color: WORD_COLORS[i % WORD_COLORS.length],
+    };
+  });
+
+  // Update question bar
+  document.getElementById('qtext').textContent = curQ.q;
+  document.getElementById('qref').textContent = curQ.ref || '';
+}
+
+// ═══════════════════════════════════════════════════════
+//  START / STOP
+// ═══════════════════════════════════════════════════════
+function startGame(d) {
+  diff = d;
+  score = 0; wave = 1; lives = 3; combo = 1; bestCombo = 1;
+  bullets = []; targets = []; particles = []; flashes = [];
+  answered = false; nextQTimer = 0;
+  qPool = shuffle([...QS]);
+
+  SHIP.x = W / 2;
+  SHIP.y = GROUND - SHIP.h / 2 - 4;
+
+  // Hide overlays
+  ['homeScreen','gameOverScreen','howScreen'].forEach(function(id) {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('qbar').style.display = 'block';
+  if (isMobile) document.getElementById('mctrl').style.display = 'flex';
+
+  state = 'playing';
+  paused = false;
+  pickQuestion();
+  updateHUD();
+  if (raf) cancelAnimationFrame(raf);
+  loop();
+}
+
+function goHome() {
+  state = 'home';
+  if (raf) cancelAnimationFrame(raf);
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('qbar').style.display = 'none';
+  document.getElementById('pauseOverlay').classList.remove('show');
+  document.getElementById('gameOverScreen').style.display = 'none';
+  document.getElementById('homeScreen').style.display = 'flex';
+  document.getElementById('homeHigh').textContent = highScore.toLocaleString();
+  drawIdle();
+}
+
+function showHow() {
+  document.getElementById('homeScreen').style.display = 'none';
+  document.getElementById('howScreen').style.display = 'flex';
+}
+function hideHow() {
+  document.getElementById('howScreen').style.display = 'none';
+  document.getElementById('homeScreen').style.display = 'flex';
+}
+
+function togglePause() {
+  if (state === 'playing') {
+    state = 'paused';
+    paused = true;
+    document.getElementById('pauseOverlay').classList.add('show');
+  } else if (state === 'paused') {
+    state = 'playing';
+    paused = false;
+    document.getElementById('pauseOverlay').classList.remove('show');
+    loop();
+  }
+}
+
+function gameOver() {
+  state = 'over';
+  if (raf) cancelAnimationFrame(raf);
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem('sb_high', highScore);
+  }
+
+  const pct = score / Math.max(1, wave * 500);
+  let title = 'Keep Going!', badge = 'Study the Word daily';
+  if (wave >= 5) { title = 'Scripture Champion!'; badge = '🏆 Amazing — you know your Bible!'; }
+  else if (wave >= 3) { title = 'Well Done!'; badge = 'Strong Bible knowledge'; }
+  else if (wave >= 2) { title = 'Good Effort!'; badge = 'Keep reading the Word'; }
+
+  if (score >= highScore && score > 0) badge = '🏆 New High Score! ' + badge;
+
+  document.getElementById('goTitle').textContent = title;
+  document.getElementById('goBadge').textContent = badge;
+  document.getElementById('goScore').textContent = score.toLocaleString();
+  document.getElementById('goWave').textContent = wave;
+  document.getElementById('goCombo').textContent = 'x' + bestCombo;
+
+  const v = END_VERSES[Math.floor(Math.random() * END_VERSES.length)];
+  document.getElementById('goVerse').innerHTML = '\u201c' + v.t + '\u201d<cite>' + v.r + '</cite>';
+
+  document.getElementById('goPlayAgain').onclick = function() { startGame(diff); };
+
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('qbar').style.display = 'none';
+  document.getElementById('gameOverScreen').style.display = 'flex';
+  drawIdle();
+}
+
+// ═══════════════════════════════════════════════════════
+//  HUD
+// ═══════════════════════════════════════════════════════
+function updateHUD() {
+  document.getElementById('scoreVal').textContent = score.toLocaleString();
+  document.getElementById('waveVal').textContent = wave;
+  const h = '♥'.repeat(lives) + '♡'.repeat(Math.max(0, 3 - lives));
+  document.getElementById('livesRow').textContent = h;
+  document.getElementById('comboVal').textContent = 'x' + combo;
+}
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function spawnParticles(x, y, color, n) {
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 / n) * i + Math.random() * 0.6;
+    const spd = 2.5 + Math.random() * 4;
+    particles.push({
+      x, y, color,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd - 1.5,
+      life: 30 + Math.random() * 20,
+      maxLife: 50, r: 2.5 + Math.random() * 2.5,
+    });
+  }
+}
+
+function addFlash(text, color, x, y) {
+  flashes.push({ text, color, x, y, life: 48, maxLife: 48, vy: -1.2 });
+}
+
+// ═══════════════════════════════════════════════════════
+//  MAIN LOOP
+// ═══════════════════════════════════════════════════════
+function loop() {
+  if (state !== 'playing') return;
+  update();
+  render();
+  raf = requestAnimationFrame(loop);
+}
+
+let frame = 0;
+function update() {
+  frame++;
+
+  // Move ship
+  const spd = SHIP.speed + (diff - 1) * 0.3;
+  if ((keys['ArrowLeft'] || keys['KeyA']) && SHIP.x - SHIP.w / 2 > 10) SHIP.x -= spd;
+  if ((keys['ArrowRight'] || keys['KeyD']) && SHIP.x + SHIP.w / 2 < W - 10) SHIP.x += spd;
+  SHIP.y = GROUND - SHIP.h / 2 - 4;
+
+  // Move bullets up
+  bullets = bullets.filter(function(b) { return b.y > -20; });
+  bullets.forEach(function(b) { b.y += b.vy; });
+
+  // Move targets down
+  targets.forEach(function(t) {
+    if (!t.hit) t.y += t.vy;
+    else t.hitTimer++;
+  });
+  targets = targets.filter(function(t) { return !t.hit || t.hitTimer < 28; });
+
+  // Bullet ↔ target collision
+  bullets.forEach(function(b) {
+    if (b.dead) return;
+    targets.forEach(function(t) {
+      if (t.hit || b.dead) return;
+      const hw = t.w / 2 + 6;
+      if (b.x > t.x - hw && b.x < t.x + hw && b.y > t.y - t.h - 4 && b.y < t.y + 8) {
+        b.dead = true;
+        t.hit = true;
+        if (t.isAnswer) {
+          // Correct!
+          combo = Math.min(combo + 1, 10);
+          if (combo > bestCombo) bestCombo = combo;
+          const pts = 100 * combo + (wave - 1) * 50;
+          score += pts;
+          spawnParticles(t.x, t.y, '#3dc97a', 12);
+          addFlash('+' + pts + (combo > 1 ? ' x' + combo + '!' : ''), '#3dc97a', t.x, t.y - 20);
+          updateHUD();
+          answered = true;
+          nextQTimer = 40; // frames before next question
+        } else {
+          // Wrong!
+          combo = 1;
+          lives--;
+          spawnParticles(t.x, t.y, '#e05050', 8);
+          addFlash('WRONG! -1 ♥', '#e05050', W / 2, H / 2 - 40);
+          updateHUD();
+          if (lives <= 0) { gameOver(); return; }
+          // Kill remaining targets and repick
+          answered = true;
+          nextQTimer = 55;
+        }
+      }
+    });
+  });
+  bullets = bullets.filter(function(b) { return !b.dead; });
+
+  // Correct answer falls off screen — lose life
+  if (!answered) {
+    targets.forEach(function(t) {
+      if (!t.hit && t.isAnswer && t.y > GROUND + 20) {
+        t.hit = true;
+        combo = 1;
+        lives--;
+        spawnParticles(t.x, GROUND, '#e05050', 6);
+        addFlash('MISSED! -1 ♥', '#e05050', W / 2, H / 2 - 40);
+        updateHUD();
+        if (lives <= 0) { gameOver(); return; }
+        answered = true;
+        nextQTimer = 45;
+      }
+    });
+  }
+
+  // Next question timer
+  if (answered && nextQTimer > 0) {
+    nextQTimer--;
+    if (nextQTimer === 0) {
+      // Check if wave complete (every 5 correct answers)
+      wave++;
+      pickQuestion();
+    }
+  }
+
+  // If all targets gone without answer (edge case)
+  if (targets.length === 0 && !answered) {
+    pickQuestion();
+  }
+
+  // Particles
+  particles = particles.filter(function(p) { return p.life > 0; });
+  particles.forEach(function(p) {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.18;
+    p.life--;
+  });
+
+  // Flashes
+  flashes = flashes.filter(function(f) { return f.life > 0; });
+  flashes.forEach(function(f) { f.y += f.vy; f.life--; });
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════
+function render() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = '#04030a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Stars
+  drawStars();
+
+  // Ground line
+  ctx.strokeStyle = 'rgba(201,151,58,.1)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, GROUND + 6);
+  ctx.lineTo(W, GROUND + 6);
+  ctx.stroke();
+
+  // Targets — adaptive font + word wrap on mobile
+  const maxBoxW = isMobile ? Math.floor((W - 24) / (targets.length > 2 ? 2 : targets.length)) - 8 : Math.floor((W - 40) / Math.max(targets.length,1)) - 6;
+  const tFontSize = isMobile ? 11 : 13;
+  ctx.font = 'bold ' + tFontSize + 'px "Courier New",monospace';
+  ctx.textAlign = 'center';
+
+  // Helper: wrap text into lines that fit maxBoxW
+  function wrapWord(word, maxW) {
+    const words = word.split(' ');
+    const lines = [];
+    let cur = '';
+    words.forEach(function(w) {
+      const test = cur ? cur + ' ' + w : w;
+      if (ctx.measureText(test).width + 16 <= maxW) {
+        cur = test;
+      } else {
+        if (cur) lines.push(cur);
+        cur = w;
+      }
+    });
+    if (cur) lines.push(cur);
+    return lines;
+  }
+
+  targets.forEach(function(t) {
+    if (t.hitTimer > 20) return;
+    const alpha = t.hit ? Math.max(0, 1 - t.hitTimer / 20) : 1;
+    ctx.globalAlpha = alpha;
+
+    // Measure with wrapping
+    const lines = wrapWord(t.word, maxBoxW);
+    const lineH = tFontSize + 4;
+    t.w = Math.min(maxBoxW, Math.max(...lines.map(function(l){return ctx.measureText(l).width + 18;})));
+    t.h = lines.length * lineH + 12;
+
+    // Box
+    const x = t.x - t.w / 2, y = t.y - t.h;
+    ctx.fillStyle = 'rgba(255,255,255,.04)';
+    ctx.fillRect(x, y, t.w, t.h);
+    ctx.strokeStyle = 'rgba(255,255,255,.2)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, t.w, t.h);
+
+    // Danger glow when near ground
+    if (!t.hit && t.y > GROUND - 90) {
+      const danger = Math.min(1, (t.y - (GROUND - 90)) / 90);
+      ctx.strokeStyle = 'rgba(224,80,80,' + (danger * 0.7) + ')';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x - 1, y - 1, t.w + 2, t.h + 2);
+    }
+
+    // Text — draw each line
+    ctx.fillStyle = t.color;
+    ctx.textBaseline = 'middle';
+    const startY = y + t.h / 2 - ((lines.length - 1) * lineH) / 2;
+    lines.forEach(function(line, li) {
+      ctx.fillText(line, t.x, startY + li * lineH);
+    });
+    ctx.globalAlpha = 1;
+  });
+
+  // Bullets
+  bullets.forEach(function(b) {
+    ctx.save();
+    ctx.fillStyle = '#e8b84b';
+    ctx.shadowColor = '#e8b84b';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // Particles
+  particles.forEach(function(p) {
+    const a = p.life / p.maxLife;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // Flash messages
+  flashes.forEach(function(f) {
+    const a = f.life / f.maxLife;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.font = 'bold italic 22px Georgia,serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = f.color;
+    ctx.shadowColor = f.color;
+    ctx.shadowBlur = 16;
+    ctx.fillText(f.text, f.x, f.y);
+    ctx.restore();
+  });
+
+  // Ship
+  drawShip(SHIP.x, SHIP.y);
+}
+
+function drawShip(x, y) {
+  ctx.save();
+  ctx.fillStyle = '#c9973a';
+  ctx.shadowColor = '#c9973a';
+  ctx.shadowBlur = 14;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 18);
+  ctx.lineTo(x - 16, y + 10);
+  ctx.lineTo(x - 5, y + 4);
+  ctx.lineTo(x, y + 8);
+  ctx.lineTo(x + 5, y + 4);
+  ctx.lineTo(x + 16, y + 10);
+  ctx.closePath();
+  ctx.fill();
+
+  // Cross emblem
+  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  ctx.shadowBlur = 0;
+  ctx.fillRect(x - 1.5, y - 9, 3, 11);
+  ctx.fillRect(x - 5, y - 5, 10, 3);
+
+  // Engine glow
+  ctx.fillStyle = 'rgba(232,184,75,.5)';
+  ctx.shadowColor = '#e8b847';
+  ctx.shadowBlur = 14;
+  ctx.beginPath();
+  ctx.ellipse(x, y + 12, 5, 3.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawStars() {
+  ctx.save();
+  const t = Date.now() / 1200;
+  stars.forEach(function(s) {
+    const a = s.a * (0.6 + 0.4 * Math.sin(t + s.blink));
+    ctx.fillStyle = `rgba(250,246,238,${a})`;
+    ctx.beginPath();
+    ctx.arc(s.x % W, s.y % H, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function drawIdle() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#04030a';
+  ctx.fillRect(0, 0, W, H);
+  drawStars();
+  drawShip(W / 2, H - 100);
+  requestAnimationFrame(drawIdle);
+}
+
+// Start idle animation
+drawIdle();
+</script>
+</body>
+</html>

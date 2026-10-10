@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Bible Crossword</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{background:#08041a;font-family:'Segoe UI',sans-serif;color:#e8dfc0;display:flex;flex-direction:column;min-height:100dvh;overflow-x:hidden;}
+
+/* TOP: Active clue */
+#active-clue-box{background:#0f0824;border-bottom:2px solid rgba(200,168,75,0.45);padding:14px 16px;min-height:72px;display:flex;align-items:center;gap:12px;}
+#ac-badge{background:#c8a84b;color:#08041a;font-size:17px;font-weight:900;border-radius:5px;padding:4px 9px;white-space:nowrap;display:none;}
+#ac-dir{color:rgba(200,168,75,0.55);font-size:12px;text-transform:uppercase;letter-spacing:1.5px;display:none;margin-bottom:2px;}
+#ac-clue{font-size:18px;line-height:1.35;color:#f0e8cc;font-weight:500;flex:1;display:none;}
+#ac-hint{font-size:15px;color:rgba(200,168,75,0.4);font-style:italic;flex:1;text-align:center;}
+
+/* Progress */
+#progress-bar{height:4px;background:rgba(255,255,255,0.06);}
+#progress-fill{height:100%;background:linear-gradient(90deg,#c8a84b,#f5d87a);width:0%;transition:width 0.4s;}
+#progress-label{text-align:center;font-size:12px;color:rgba(200,168,75,0.5);padding:4px 0;letter-spacing:1px;}
+
+/* Grid */
+#grid-area{display:flex;justify-content:center;padding:10px 6px 6px;}
+#grid-table{border-collapse:collapse;}
+.cell{position:relative;background:#1a1035;border:1px solid rgba(200,168,75,0.22);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background 0.1s;}
+.cell.black{background:#06030d;border-color:#06030d;cursor:default;}
+.cell.hilite{background:#221450;}
+.cell.correct{background:#0b2416;cursor:default;}
+.cell.wrong{background:#2a0a0a;}
+.cell-num{position:absolute;top:1px;left:2px;color:#f5d87a;font-weight:700;line-height:1;pointer-events:none;}
+.cell-letter{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;pointer-events:none;}
+.cell.correct .cell-letter{color:#4ecf7f;}
+.cell.wrong .cell-letter{color:#e74c3c;}
+.cell.hilite .cell-letter{color:#f5d87a;}
+.cell:not(.correct):not(.wrong):not(.hilite) .cell-letter{color:#d8d0b8;}
+
+/* Answer input */
+#answer-bar{display:none;background:#0f0824;border-top:2px solid rgba(200,168,75,0.35);padding:10px 12px;gap:8px;flex-direction:column;position:sticky;bottom:0;z-index:20;}
+#answer-row{display:flex;gap:8px;}
+#answer-input{flex:1;background:rgba(10,5,30,0.95);border:2px solid #c8a84b;border-radius:7px;color:#f5d87a;font-size:22px;font-weight:700;text-align:center;padding:8px 10px;outline:none;letter-spacing:5px;text-transform:uppercase;min-width:0;}
+#answer-input:focus{border-color:#f5d87a;box-shadow:0 0 16px rgba(245,216,122,0.2);}
+#submit-btn{background:linear-gradient(135deg,#b8860b,#f5d87a);color:#08041a;border:none;border-radius:7px;padding:8px 18px;font-size:15px;font-weight:800;cursor:pointer;white-space:nowrap;}
+#cancel-btn{background:rgba(255,255,255,0.06);color:#888;border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:8px 12px;font-size:13px;cursor:pointer;}
+#wrong-msg{color:#e74c3c;font-size:13px;text-align:center;display:none;}
+
+/* Score */
+#score-badge{position:fixed;top:8px;right:10px;z-index:30;background:rgba(5,2,18,0.9);border:1px solid rgba(200,168,75,0.4);border-radius:16px;padding:4px 12px;color:#f5d87a;font-size:13px;font-weight:600;}
+
+/* Clue list */
+#clue-list{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;padding:10px 12px 100px;}
+@media(max-width:460px){#clue-list{grid-template-columns:1fr;}}
+.cl-group{margin-bottom:8px;}
+.cl-heading{color:#7ab8e8;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid rgba(200,168,75,0.2);padding-bottom:5px;margin-bottom:7px;}
+.cl-row{display:flex;gap:6px;padding:6px 7px;border-radius:5px;cursor:pointer;transition:background 0.1s;-webkit-tap-highlight-color:transparent;align-items:flex-start;}
+.cl-row:hover,.cl-row:active{background:rgba(200,168,75,0.1);}
+.cl-row.cl-selected{background:rgba(200,168,75,0.16);border-left:3px solid #f5d87a;padding-left:5px;}
+.cl-row.cl-solved{opacity:0.38;text-decoration:line-through;cursor:default;}
+.cl-row.cl-solved:hover{background:none;}
+.cl-n{color:#f5d87a;font-size:14px;font-weight:700;min-width:22px;flex-shrink:0;}
+.cl-text{color:#c8c0a8;font-size:14px;line-height:1.4;flex:1;}
+.cl-len{color:rgba(200,168,75,0.4);font-size:11px;white-space:nowrap;margin-top:3px;}
+
+/* Win */
+#win-screen{display:none;position:fixed;inset:0;z-index:50;background:rgba(4,2,14,0.95);flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:28px;text-align:center;}
+#win-screen h1{color:#f5d87a;font-size:32px;font-weight:900;}
+#win-screen p{color:#c0b098;font-size:15px;max-width:340px;line-height:1.8;}
+#win-screen button{padding:12px 32px;background:linear-gradient(135deg,#b8860b,#f5d87a);color:#08041a;border:none;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div id="active-clue-box">
+  <span id="ac-hint">Tap a square to start</span>
+  <span id="ac-badge"></span>
+  <div style="flex:1;display:none;flex-direction:column;" id="ac-detail">
+    <div id="ac-dir"></div>
+    <div id="ac-clue"></div>
+  </div>
+</div>
+<div id="progress-bar"><div id="progress-fill"></div></div>
+<div id="progress-label">0 / <span id="total-count">0</span> solved</div>
+
+<div id="score-badge">0 / <span id="total-n">0</span></div>
+
+<div id="grid-area"><table id="grid-table"></table></div>
+
+<div id="answer-bar">
+  <div id="answer-row">
+    <input id="answer-input" type="text" autocomplete="off" spellcheck="false" placeholder="TYPE ANSWER" maxlength="20"/>
+    <button id="submit-btn">✓ Check</button>
+    <button id="cancel-btn">✕</button>
+  </div>
+  <div id="wrong-msg">✗ Not quite — try again</div>
+</div>
+
+<div id="clue-list">
+  <div class="cl-group"><div class="cl-heading">→ Across</div><div id="across-clues"></div></div>
+  <div class="cl-group"><div class="cl-heading">↓ Down</div><div id="down-clues"></div></div>
+</div>
+
+<div id="win-screen">
+  <h1>✦ Hallelujah! ✦</h1>
+  <p id="win-verse"></p>
+  <button onclick="location.reload()">▶ Play Again</button>
+</div>
+
+<script>
+const WORDS=[
+  {num:1,  word:'MOSES',  dir:'A', row:0,  col:0,  clue:'Led Israel out of Egypt'},
+  {num:5,  word:'ARK',    dir:'A', row:0,  col:8,  clue:'Noah built this vessel'},
+  {num:6,  word:'ADAM',   dir:'A', row:2,  col:0,  clue:'First man God created'},
+  {num:8,  word:'EDEN',   dir:'A', row:2,  col:7,  clue:'Garden of paradise'},
+  {num:10, word:'RUTH',   dir:'A', row:4,  col:0,  clue:'"Where you go, I will go"'},
+  {num:11, word:'DAVID',  dir:'A', row:4,  col:5,  clue:'Shepherd boy who slew Goliath'},
+  {num:13, word:'ELIJAH', dir:'A', row:6,  col:0,  clue:'Prophet taken to heaven in fire'},
+  {num:15, word:'PAUL',   dir:'A', row:6,  col:8,  clue:'Wrote letters to the churches'},
+  {num:16, word:'JORDAN', dir:'A', row:8,  col:0,  clue:'River where Jesus was baptised'},
+  {num:18, word:'PETER',  dir:'A', row:8,  col:7,  clue:'The rock of the church'},
+  {num:19, word:'NOAH',   dir:'A', row:10, col:0,  clue:"Built the ark at God's command"},
+  {num:21, word:'ESTHER', dir:'A', row:10, col:6,  clue:'Queen who saved her people'},
+  {num:22, word:'PSALM',  dir:'A', row:12, col:0,  clue:'A song of praise in the Bible'},
+  {num:23, word:'GRACE',  dir:'A', row:12, col:7,  clue:"God's unmerited favour"},
+  {num:1,  word:'BLOOD',  dir:'D', row:5,  col:1,  clue:'The blood of the covenant'},
+  {num:2,  word:'FAITH',  dir:'D', row:1,  col:2,  clue:'Substance of things hoped for'},
+  {num:3,  word:'SARAH',  dir:'D', row:5,  col:4,  clue:'Wife of Abraham, mother of Isaac'},
+  {num:4,  word:'ANGEL',  dir:'D', row:7,  col:5,  clue:'Heavenly messenger of God'},
+  {num:5,  word:'HEAVEN', dir:'D', row:1,  col:7,  clue:'Eternal home of the redeemed'},
+  {num:6,  word:'STAR',   dir:'D', row:9,  col:8,  clue:'Guided the wise men to Jesus'},
+  {num:7,  word:'SALT',   dir:'D', row:5,  col:9,  clue:'Christians are the salt of the earth'},
+  {num:8,  word:'KING',   dir:'D', row:0,  col:10, clue:'Title of David and Solomon'},
+  {num:9,  word:'DANIEL', dir:'D', row:1,  col:11, clue:"Survived the lions' den"},
+  {num:10, word:'MIRIAM', dir:'D', row:0,  col:6,  clue:'Prophetess, sister of Moses'},
+];
+
+const ROWS=13, COLS=13;
+const G = Array.from({length:ROWS}, () => Array(COLS).fill(null));
+WORDS.forEach(w => {
+  for (let i = 0; i < w.word.length; i++) {
+    const r = w.dir==='A' ? w.row     : w.row + i;
+    const c = w.dir==='A' ? w.col + i : w.col;
+    if (!G[r][c]) G[r][c] = {letter:w.word[i], user:'', num:null};
+    else G[r][c].letter = w.word[i];
+    if (i===0 && !G[r][c].num) G[r][c].num = w.num;
+  }
+});
+
+let activeWord = null;
+let solved = 0;
+const total = WORDS.length;
+const solvedSet = new Set();
+
+function buildGrid() {
+  const table = document.getElementById('grid-table');
+  const vw = Math.min(window.innerWidth, 540);
+  const cs = Math.floor((vw - 12) / COLS);
+  const letterSize = Math.max(9, Math.floor(cs * 0.52));
+  const numSize    = Math.max(6, Math.floor(cs * 0.27));
+
+  for (let r = 0; r < ROWS; r++) {
+    const tr = document.createElement('tr');
+    for (let c = 0; c < COLS; c++) {
+      const td = document.createElement('td');
+      td.className = 'cell' + (G[r][c] ? '' : ' black');
+      td.style.cssText = `width:${cs}px;height:${cs}px;`;
+      td.dataset.r = r; td.dataset.c = c;
+      if (G[r][c]) {
+        if (G[r][c].num) {
+          const n = document.createElement('span');
+          n.className = 'cell-num';
+          n.style.fontSize = numSize + 'px';
+          n.textContent = G[r][c].num;
+          td.appendChild(n);
+        }
+        const l = document.createElement('span');
+        l.className = 'cell-letter';
+        l.style.fontSize = letterSize + 'px';
+        td.appendChild(l);
+        td.addEventListener('click', () => cellClick(r, c));
+      }
+      tr.appendChild(td);
+    }
+    table.appendChild(tr);
+  }
+}
+
+function cellClick(r, c) {
+  const matches = WORDS.filter(w => isInWord(r, c, w)).filter(w => !solvedSet.has(key(w)));
+  if (!matches.length) return;
+  let pick = matches[0];
+  if (activeWord && matches.length > 1) {
+    const ci = matches.findIndex(m => m.dir===activeWord.dir && m.num===activeWord.num);
+    pick = matches[(ci + 1) % matches.length];
+  }
+  openWord(pick);
+}
+
+function key(w) { return w.dir + w.num; }
+
+function isInWord(r, c, w) {
+  for (let i = 0; i < w.word.length; i++) {
+    if ((w.dir==='A'?w.row:w.row+i)===r && (w.dir==='A'?w.col+i:w.col)===c) return true;
+  }
+  return false;
+}
+
+function openWord(w) {
+  activeWord = w;
+  refreshHighlights();
+  showActiveBanner(w);
+  openAnswerBar(w);
+  document.querySelectorAll('.cl-row').forEach(el => el.classList.remove('cl-selected'));
+  const el = document.getElementById('cli-' + key(w));
+  if (el) { el.classList.add('cl-selected'); el.scrollIntoView({block:'nearest', behavior:'smooth'}); }
+}
+
+function closeWord() {
+  activeWord = null;
+  refreshHighlights();
+  document.getElementById('answer-bar').style.display = 'none';
+  document.getElementById('ac-hint').style.display = 'block';
+  document.getElementById('ac-badge').style.display = 'none';
+  document.getElementById('ac-detail').style.display = 'none';
+  document.querySelectorAll('.cl-row').forEach(el => el.classList.remove('cl-selected'));
+}
+
+function showActiveBanner(w) {
+  document.getElementById('ac-hint').style.display = 'none';
+  document.getElementById('ac-badge').style.display = 'inline-block';
+  document.getElementById('ac-badge').textContent = w.num + (w.dir==='A'?' →':' ↓');
+  document.getElementById('ac-detail').style.display = 'flex';
+  document.getElementById('ac-dir').textContent = w.dir==='A' ? 'Across' : 'Down';
+  document.getElementById('ac-dir').style.display = 'block';
+  document.getElementById('ac-clue').textContent = w.clue + '  (' + w.word.length + ' letters)';
+  document.getElementById('ac-clue').style.display = 'block';
+}
+
+function openAnswerBar(w) {
+  const bar = document.getElementById('answer-bar');
+  bar.style.display = 'flex';
+  const inp = document.getElementById('answer-input');
+  inp.value = '';
+  inp.placeholder = '─'.repeat(w.word.length);
+  document.getElementById('wrong-msg').style.display = 'none';
+  inp.style.borderColor = '#c8a84b';
+  setTimeout(() => inp.focus(), 60);
+}
+
+function refreshHighlights() {
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (!G[r][c]) continue;
+      const td = cellEl(r, c);
+      if (!td) continue;
+      const inActive = activeWord && isInWord(r, c, activeWord);
+      td.classList.remove('hilite');
+      if (!td.classList.contains('correct') && !td.classList.contains('wrong') && inActive) {
+        td.classList.add('hilite');
+      }
+    }
+  }
+}
+
+function checkAnswer() {
+  if (!activeWord) return;
+  const val = document.getElementById('answer-input').value.toUpperCase().replace(/[^A-Z]/g,'');
+  const w = activeWord;
+  if (val === w.word) {
+    for (let i = 0; i < w.word.length; i++) {
+      const r = w.dir==='A' ? w.row     : w.row + i;
+      const c = w.dir==='A' ? w.col + i : w.col;
+      G[r][c].user = w.word[i];
+      const td = cellEl(r, c);
+      if (td) {
+        td.classList.remove('hilite','wrong');
+        td.classList.add('correct');
+        const l = td.querySelector('.cell-letter');
+        if (l) l.textContent = w.word[i];
+      }
+    }
+    solvedSet.add(key(w));
+    solved++;
+    document.getElementById('progress-fill').style.width = (solved/total*100) + '%';
+    document.getElementById('progress-label').textContent = solved + ' / ' + total + ' solved';
+    document.getElementById('score-badge').textContent = solved + ' / ' + total;
+    const cli = document.getElementById('cli-' + key(w));
+    if (cli) cli.classList.add('cl-solved');
+    closeWord();
+    if (solved === total) setTimeout(showWin, 700);
+  } else {
+    const inp = document.getElementById('answer-input');
+    inp.style.borderColor = '#e74c3c';
+    document.getElementById('wrong-msg').style.display = 'block';
+    for (let i = 0; i < w.word.length; i++) {
+      const r = w.dir==='A' ? w.row     : w.row + i;
+      const c = w.dir==='A' ? w.col + i : w.col;
+      if (!G[r][c].user && i < val.length) {
+        const td = cellEl(r, c);
+        if (td) {
+          td.classList.add('wrong');
+          const l = td.querySelector('.cell-letter');
+          if (l) l.textContent = val[i];
+        }
+      }
+    }
+    setTimeout(() => {
+      inp.style.borderColor = '#c8a84b';
+      for (let i = 0; i < w.word.length; i++) {
+        const r = w.dir==='A' ? w.row     : w.row + i;
+        const c = w.dir==='A' ? w.col + i : w.col;
+        if (!G[r][c].user) {
+          const td = cellEl(r, c);
+          if (td) {
+            td.classList.remove('wrong');
+            const l = td.querySelector('.cell-letter');
+            if (l) l.textContent = '';
+          }
+        }
+      }
+      refreshHighlights();
+    }, 900);
+  }
+}
+
+function cellEl(r, c) {
+  return document.querySelector('[data-r="'+r+'"][data-c="'+c+'"]');
+}
+
+function buildClueList() {
+  document.getElementById('total-count').textContent = total;
+  document.getElementById('total-n').textContent = total;
+  const aC = document.getElementById('across-clues');
+  const dC = document.getElementById('down-clues');
+  WORDS.forEach(w => {
+    const div = document.createElement('div');
+    div.className = 'cl-row';
+    div.id = 'cli-' + key(w);
+    div.innerHTML =
+      '<span class="cl-n">' + w.num + '.</span>' +
+      '<span class="cl-text">' + w.clue + '</span>' +
+      '<span class="cl-len">(' + w.word.length + ')</span>';
+    div.addEventListener('click', () => {
+      if (solvedSet.has(key(w))) return;
+      openWord(w);
+    });
+    (w.dir==='A' ? aC : dC).appendChild(div);
+  });
+}
+
+function showWin() {
+  const vv = [
+    '"Your word is a lamp to my feet." — Psalm 119:105',
+    '"The entrance of Your words gives light." — Psalm 119:130',
+    '"Heaven and earth will pass away, but My words will never pass away." — Matthew 24:35',
+  ];
+  document.getElementById('win-verse').textContent = vv[Math.floor(Math.random()*vv.length)];
+  document.getElementById('win-screen').style.display = 'flex';
+}
+
+document.getElementById('submit-btn').addEventListener('click', checkAnswer);
+document.getElementById('cancel-btn').addEventListener('click', closeWord);
+document.getElementById('answer-input').addEventListener('keydown', e => { if (e.key==='Enter') checkAnswer(); });
+
+buildGrid();
+buildClueList();
+</script>
+</body>
+</html>
